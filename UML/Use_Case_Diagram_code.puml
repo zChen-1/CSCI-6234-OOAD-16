@@ -1,0 +1,24 @@
+@startuml
+left to right direction
+
+actor "User" as U
+actor "Admin" as A
+
+rectangle "Wiki System" {
+  (View Page) as UC1
+  (Search Page) as UC2
+  (Edit Page) as UC3
+  (Save Page) as UC4
+  (Manage Users) as UC5
+}
+
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+
+A --> UC5
+A --> UC1
+
+UC3 .> UC4 : <<include>>
+@enduml

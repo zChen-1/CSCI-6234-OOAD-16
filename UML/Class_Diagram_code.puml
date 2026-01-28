@@ -1,0 +1,16 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Feature
+class "Structural\nFeature" as StructuralFeature
+class "Behavioral\nFeature" as BehavioralFeature
+class Parameter
+
+Feature <|-- StructuralFeature
+Feature <|-- BehavioralFeature
+
+BehavioralFeature "1" *-- "0..1" Parameter : parameters
+note on link
+{ordered}
+end note
+@enduml

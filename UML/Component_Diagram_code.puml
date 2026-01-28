@@ -1,0 +1,18 @@
+@startuml
+component "Benefits\nWindow" as BW
+component "Employee" as EMP
+component "Employee\nData Gateway" as EDG
+component "Benefits\nData Gateway" as BDG
+
+BW ..> EMP : dependency
+EMP ..> EDG : uses
+EMP ..> BDG : uses
+
+note top of BW
+client
+end note
+
+note top of EMP
+supplier
+end note
+@enduml

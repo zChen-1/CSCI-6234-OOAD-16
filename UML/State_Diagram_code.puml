@@ -1,0 +1,27 @@
+@startuml
+hide empty description
+
+[*] --> WelcomeVisitors
+
+WelcomeVisitors --> RecentChanges : go to recent changes
+RecentChanges --> WelcomeVisitors : home
+
+WelcomeVisitors --> FindPage : find page
+FindPage --> WelcomeVisitors : home
+
+FindPage --> SomeWikiPage : submit search
+SomeWikiPage --> FindPage : search again
+
+SomeWikiPage --> EditPage : edit
+EditPage --> SomeWikiPage : save button
+
+SomeWikiPage --> VisualTour : visual tour
+VisualTour --> SomeWikiPage : back
+
+RecentChanges -[dashed]-> FindPage : navigation
+SomeWikiPage -[dashed]-> EditPage : screen
+
+note right of FindPage
+! non-normative
+end note
+@enduml
