@@ -1,0 +1,26 @@
+@startuml
+left to right direction
+
+actor "User" as User
+
+rectangle "Traffic Camera Browser" {
+
+  boundary "Browsing History UI\n<<boundary>>" as B1
+  control "History Controller\n<<control>>" as C1
+  entity "User Account\n<<entity>>" as E1
+  entity "Browsing History\n<<entity>>" as E2
+}
+
+note right of B1
+  After logging in, a browsing history button
+  will appear on the user interface. Users can
+  view or clear their browsing history.
+end note
+
+User --> B1 : open history / clear history
+B1 --> C1 : history request
+C1 --> E1 : identify user
+C1 --> E2 : retrieve/clear history items
+C1 --> B1 : show updated history
+
+@enduml

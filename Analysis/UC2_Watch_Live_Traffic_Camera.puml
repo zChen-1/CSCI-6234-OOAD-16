@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+
+actor "User" as User
+
+rectangle "Traffic Camera Browser" {
+
+  boundary "Map & Camera Viewer UI\n<<boundary>>" as B1
+  control "Live Stream Controller\n<<control>>" as C1
+  entity "Camera Catalog\n<<entity>>" as E1
+  entity "Live Stream Session\n<<entity>>" as E2
+}
+
+note right of B1
+  The platform displays a map showing
+  the location of each camera. Users
+  can watch videos by clicking on the
+  corresponding camera.
+end note
+
+User --> B1 : click camera on map
+B1 --> C1 : request live stream
+C1 --> E1 : fetch camera stream URL
+C1 --> E2 : start/track session
+C1 --> B1 : deliver live video
+
+@enduml

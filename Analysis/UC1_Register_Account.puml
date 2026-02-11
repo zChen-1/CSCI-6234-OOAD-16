@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+
+actor "User" as User
+actor "Authentication Service" as Auth
+
+rectangle "Traffic Camera Browser" {
+
+  boundary "Registration/Login UI\n<<boundary>>" as B1
+  control "Registration Controller\n<<control>>" as C1
+  entity "User Account\n<<entity>>" as E1
+}
+
+note right of B1
+  Users can find a registration/login
+  button in the corner of the page.
+end note
+
+User --> B1 : enter info + submit
+B1 --> C1 : registration request
+C1 --> Auth : validate credentials\nhash password
+C1 --> E1 : create user record
+C1 --> B1 : show success/error
+
+@enduml

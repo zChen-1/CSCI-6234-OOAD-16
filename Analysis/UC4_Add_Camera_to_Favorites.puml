@@ -1,0 +1,26 @@
+@startuml
+left to right direction
+skinparam shadowing false
+
+actor "User" as User
+
+rectangle "Traffic Camera Browser" {
+
+  boundary "       Camera Viewer UI<<boundary>>" as B1
+  control "Favorites Controller\n<<control>>" as C1
+  entity "Favorites List\n<<entity>>" as E1
+}
+
+note right of B1
+  After logging in, a favorites list
+  button will appear on the user
+  interface. Users can add cameras
+  to their favorites list.
+end note
+
+User --> B1 : click "Add to Favorites"
+B1 --> C1 : add favorite request
+C1 --> E1 : save camera to favorites
+C1 --> B1 : confirm added
+
+@enduml

@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+
+actor "Admin/Developer" as Admin
+
+rectangle "Traffic Camera Browser" {
+
+  boundary "Admin Management UI\n<<boundary>>" as B1
+  control "Camera Management Controller\n<<control>>" as C1
+  entity "Admin Account\n<<entity>>" as E1
+  entity "Camera Catalog\n<<entity>>" as E2
+}
+
+note right of B1
+  After logging in, an administrator list will
+  appear on the user interface for administrators.
+  Administrators can manage the cameras displayed
+  on the platform through this list.
+end note
+
+Admin --> B1 : add/remove camera
+B1 --> C1 : management request
+C1 --> E1 : verify admin login/role
+C1 --> E2 : add/remove camera record
+C1 --> B1 : show success/error
+
+@enduml
