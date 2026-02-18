@@ -1,0 +1,68 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+' ===== Entity Classes (Domain) =====
+class User {
+  +userId: UUID
+  +email: String
+  +passwordHash: String
+}
+
+class Admin {
+  +adminId: UUID
+  +role: String
+}
+User <|-- Admin
+
+class Camera {
+  +cameraId: String
+  +name: String
+  +latitude: Decimal
+  +longitude: Decimal
+  +streamUrl: String
+  +isActive: Boolean
+}
+
+class PlaybackRequest {
+  +requestId: UUID
+  +requestedAt: DateTime
+  +startTime: DateTime
+  +endTime: DateTime
+}
+
+class RecordingSegment {
+  +segmentId: String
+  +startTime: DateTime
+  +endTime: DateTime
+  +videoUrl: String
+}
+
+class Favorite {
+  +favoriteId: UUID
+  +createdAt: DateTime
+}
+
+class HistoryEntry {
+  +historyId: UUID
+  +viewedAt: DateTime
+  +viewType: String  ' LIVE or PLAYBACK
+}
+
+' ===== Associations (with multiplicities) =====
+
+' Favorites: users add/remove cameras to favorites list
+User "1" -- "0..*" Favorite : owns >
+Camera "1" -- "0..*" Favorite : < saved
+
+' Browsing history: users view/clear history
+User "1" -- "0..*" HistoryEntry : has >
+Camera "1" -- "0..*" HistoryEntry : < viewed
+
+' Playback: request ties user + camera + time window (72 hours)
+User "1" -- "0..*" PlaybackRequest : creates >
+Camera "1" -- "0..*" PlaybackRequest : < requested for
+
+' Retroactive data: segments represent stored video for cameras
+Camera "1" -- "0..*" RecordingSegment : provides >
+
+@enduml
