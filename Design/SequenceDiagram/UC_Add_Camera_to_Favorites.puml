@@ -1,0 +1,25 @@
+@startuml
+title UC: Add/Remove Camera to Favorites (Logged-in User)
+
+actor "User" as U
+boundary "Favorites UI" as FUI
+control "FavoritesController" as FC
+entity "FavoriteList" as FL
+entity "Camera" as C
+
+U -> FUI: Click ⭐ Add to Favorites
+FUI -> FC: addFavorite(userId, cameraId)
+
+FC -> FL: loadOrCreate(userId)
+FL --> FC: favoriteListId
+
+FC -> C: findById(cameraId)
+C --> FC: camera
+
+FC -> FL: addCamera(camera)
+FL --> FC: added
+
+FC --> FUI: Update favorites panel (added)
+FUI --> U: Camera appears in favorites
+
+@enduml

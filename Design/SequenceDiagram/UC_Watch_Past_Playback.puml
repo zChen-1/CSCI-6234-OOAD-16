@@ -1,0 +1,30 @@
+@startuml
+title UC: Watch Past Playback (Last 72 Hours)
+
+actor "User" as U
+boundary "Camera Panel UI" as UI
+control "PlaybackController" as PC
+entity "Camera" as C
+participant "PlaybackService" as PB
+
+U -> UI: Choose "Past Playback"
+UI -> PC: listPlaybackOptions(cameraId)
+
+PC -> C: findById(cameraId)
+C --> PC: cameraDetails
+
+PC -> PB: getAvailableWindow(cameraId, hours=72)
+PB --> PC: timeRange + segmentIndex
+
+PC --> UI: Render timeline/segments
+
+U -> UI: Pick time T and press Play
+UI -> PC: play(cameraId, time=T)
+
+PC -> PB: getPlaybackStream(cameraId, time=T)
+PB --> PC: playbackUrl
+
+PC --> UI: startPlayback(playbackUrl)
+UI --> U: Past video plays
+
+@enduml

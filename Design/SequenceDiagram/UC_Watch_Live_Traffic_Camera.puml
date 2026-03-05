@@ -1,0 +1,22 @@
+@startuml
+title UC: Watch Live Traffic Camera
+
+actor "User" as U
+boundary "Map UI" as MAP
+control "CameraBrowseController" as CBC
+entity "Camera" as C
+participant "LiveStreamService" as LIVE
+
+U -> MAP: Click camera pin on map
+MAP -> CBC: selectCamera(cameraId)
+
+CBC -> C: findById(cameraId)
+C --> CBC: cameraDetails(url, location)
+
+CBC -> LIVE: requestLiveStream(cameraDetails.url)
+LIVE --> CBC: streamToken + streamUrl
+
+CBC --> MAP: showCameraPanel(cameraDetails)\n+ attach streamUrl
+MAP --> U: Live video starts playing
+
+@enduml
