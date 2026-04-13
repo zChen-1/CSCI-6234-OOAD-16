@@ -1,6 +1,12 @@
-# Traffic Camera 
+# Traffic Camera Browser
 
 ## Development platform: macOS
+
+## JSON files
+
+### managed_cameras.json: camera list
+### Traffic+Cameras.json: camera information from website of Arlington County
+### users.json: users' information
 
 ## How to use
 
