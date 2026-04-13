@@ -1,0 +1,142 @@
+[2026-04-12T20:51:05.210989] Recorder thread started
+[2026-04-12T20:51:05.214227] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005105Z.mp4
+[tls @ 0x7fba6e8567c0] IO error: End of file
+[https @ 0x7fba6e86e040] Error reading HTTP response: End of file
+[tls @ 0x7fba4e855680] IO error: End of file
+[https @ 0x7fba4e84d040] Error reading HTTP response: End of file
+[tls @ 0x7fba4e90e040] IO error: End of file
+[https @ 0x7fba4e90df80] Error reading HTTP response: End of file
+[tls @ 0x7fba4e928ac0] IO error: End of file
+[https @ 0x7fba4e928d80] Error reading HTTP response: End of file
+[tls @ 0x7fba4e92b1c0] IO error: End of file
+[https @ 0x7fba4e92c080] Error reading HTTP response: End of file
+[tls @ 0x7fba4e9102c0] IO error: End of file
+[https @ 0x7fba4e913cc0] Error reading HTTP response: End of file
+[tls @ 0x7fba4e93e680] IO error: End of file
+[https @ 0x7fba4e9057c0] Error reading HTTP response: End of file
+[2026-04-12T20:51:47.750472] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005105Z.mp4 (2532110 bytes)
+[2026-04-12T20:51:48.255281] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005148Z.mp4
+[tls @ 0x7fddf6704680] IO error: End of file
+[https @ 0x7fddf6704540] Error reading HTTP response: End of file
+[tls @ 0x7fddf6716e40] IO error: End of file
+[https @ 0x7fddf6716940] Error reading HTTP response: End of file
+[tls @ 0x7fddf72175c0] IO error: End of file
+[https @ 0x7fddf7218940] Error reading HTTP response: End of file
+[tls @ 0x7fddf7029800] IO error: End of file
+[https @ 0x7fddf723b7c0] Error reading HTTP response: End of file
+[tls @ 0x7fddf700fe00] IO error: End of file
+[https @ 0x7fddf70084c0] Error reading HTTP response: End of file
+[tls @ 0x7fddf673c300] IO error: End of file
+[https @ 0x7fddf673bcc0] Error reading HTTP response: End of file
+[tls @ 0x7fddf7129cc0] IO error: End of file
+[https @ 0x7fddf7120b80] Error reading HTTP response: End of file
+[2026-04-12T20:52:30.731526] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005148Z.mp4 (2530449 bytes)
+[2026-04-12T20:52:31.242110] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005231Z.mp4
+[tls @ 0x7fb742104080] IO error: End of file
+[https @ 0x7fb742004300] Error reading HTTP response: End of file
+[tls @ 0x7fb74201d340] IO error: End of file
+[https @ 0x7fb7420248c0] Error reading HTTP response: End of file
+[tls @ 0x7fb741734f00] IO error: End of file
+[https @ 0x7fb741737ec0] Error reading HTTP response: End of file
+[tls @ 0x7fb74220db80] IO error: End of file
+[https @ 0x7fb742222b80] Error reading HTTP response: End of file
+[tls @ 0x7fb741734f00] IO error: End of file
+[https @ 0x7fb741735b00] Error reading HTTP response: End of file
+[tls @ 0x7fb742211a40] IO error: End of file
+[https @ 0x7fb74226a6c0] Error reading HTTP response: End of file
+[2026-04-12T20:53:13.967609] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005231Z.mp4 (2529074 bytes)
+[2026-04-12T20:53:14.477170] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005314Z.mp4
+[tls @ 0x7f9f0e214940] IO error: End of file
+[https @ 0x7f9f0e222480] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e225140] IO error: End of file
+[https @ 0x7f9f0e221980] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e146fc0] IO error: End of file
+[https @ 0x7f9f0e165a80] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e22aa00] IO error: End of file
+[https @ 0x7f9f0e23a480] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e146f80] IO error: End of file
+[https @ 0x7f9f0e156600] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e214940] IO error: End of file
+[https @ 0x7f9f0e221980] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e251880] IO error: End of file
+[https @ 0x7f9f0e24c040] Error reading HTTP response: End of file
+[tls @ 0x7f9f0e35b100] IO error: End of file
+[https @ 0x7f9f0e321600] Error reading HTTP response: End of file
+[2026-04-12T20:53:57.385251] Recorder thread stopped
+[2026-04-12T20:54:19.755224] Recorder thread started
+[2026-04-12T20:54:19.756480] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005419Z.mp4
+[tls @ 0x7fe4b4704a00] IO error: End of file
+[https @ 0x7fe4b4704480] Error reading HTTP response: End of file
+[tls @ 0x7fe4c532d440] IO error: End of file
+[https @ 0x7fe4c527b2c0] Error reading HTTP response: End of file
+[tls @ 0x7fe4b470e740] IO error: End of file
+[https @ 0x7fe4b4717580] Error reading HTTP response: End of file
+[tls @ 0x7fe4c532d440] IO error: End of file
+[https @ 0x7fe4c532d6c0] Error reading HTTP response: End of file
+[tls @ 0x7fe4c5409780] IO error: End of file
+[https @ 0x7fe4c5409e80] Error reading HTTP response: End of file
+[tls @ 0x7fe4c540fc80] IO error: End of file
+[https @ 0x7fe4c543eb80] Error reading HTTP response: End of file
+[tls @ 0x7fe4b4743bc0] IO error: End of file
+[https @ 0x7fe4b473cd40] Error reading HTTP response: End of file
+[2026-04-12T20:55:02.454832] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005419Z.mp4 (2530132 bytes)
+[2026-04-12T20:55:02.959662] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005502Z.mp4
+[tls @ 0x7f948ac1bcc0] IO error: End of file
+[https @ 0x7f948ab275c0] Error reading HTTP response: End of file
+[tls @ 0x7f948aa106c0] IO error: End of file
+[https @ 0x7f948aa26840] Error reading HTTP response: End of file
+[tls @ 0x7f948ac1bcc0] IO error: End of file
+[https @ 0x7f948a93e2c0] Error reading HTTP response: End of file
+[tls @ 0x7f948ac30c80] IO error: End of file
+[https @ 0x7f948ac1fe80] Error reading HTTP response: End of file
+[tls @ 0x7f948ab76980] IO error: End of file
+[https @ 0x7f948ab74b80] Error reading HTTP response: End of file
+[tls @ 0x7f948a956180] IO error: End of file
+[https @ 0x7f948a928c00] Error reading HTTP response: End of file
+[tls @ 0x7f948ac30c40] IO error: End of file
+[https @ 0x7f948ac77f80] Error reading HTTP response: End of file
+[2026-04-12T20:55:36.442225] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005502Z.mp4 (2527795 bytes)
+[2026-04-12T20:55:36.951019] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005536Z.mp4
+[tls @ 0x7f7c8b005280] IO error: End of file
+[https @ 0x7f7c8b004d40] Error reading HTTP response: End of file
+[tls @ 0x7f7c8b03bec0] IO error: End of file
+[https @ 0x7f7c8b041f40] Error reading HTTP response: End of file
+[tls @ 0x7f7c9b406c80] IO error: End of file
+[https @ 0x7f7c9b406b80] Error reading HTTP response: End of file
+[tls @ 0x7f7c8b03bec0] IO error: End of file
+[https @ 0x7f7c9b42dd00] Error reading HTTP response: End of file
+[tls @ 0x7f7c9b510c80] IO error: End of file
+[https @ 0x7f7c9b510f40] Error reading HTTP response: End of file
+[tls @ 0x7f7c9b51d900] IO error: End of file
+[https @ 0x7f7c9b527140] Error reading HTTP response: End of file
+[tls @ 0x7f7c8b03bec0] IO error: End of file
+[https @ 0x7f7c8b00b180] Error reading HTTP response: End of file
+[2026-04-12T20:56:20.626668] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005536Z.mp4 (2531782 bytes)
+[2026-04-12T20:56:21.136230] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005621Z.mp4
+[tls @ 0x7f9716004080] IO error: End of file
+[https @ 0x7f9725c04300] Error reading HTTP response: End of file
+[tls @ 0x7f9725c1cac0] IO error: End of file
+[https @ 0x7f9725b0c680] Error reading HTTP response: End of file
+[tls @ 0x7f9714f43dc0] IO error: End of file
+[https @ 0x7f9714f463c0] Error reading HTTP response: End of file
+[tls @ 0x7f9716056c00] IO error: End of file
+[https @ 0x7f9716063d00] Error reading HTTP response: End of file
+[tls @ 0x7f9725b55280] IO error: End of file
+[https @ 0x7f9725b14440] Error reading HTTP response: End of file
+[tls @ 0x7f9725b0fe80] IO error: End of file
+[https @ 0x7f9725b2c9c0] Error reading HTTP response: End of file
+[tls @ 0x7f9725b55280] IO error: End of file
+[https @ 0x7f9725b0cf00] Error reading HTTP response: End of file
+[tls @ 0x7f9716017640] IO error: End of file
+[https @ 0x7f9716019980] Error reading HTTP response: End of file
+[2026-04-12T20:57:03.858444] Saved clip /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005621Z.mp4 (2528632 bytes)
+[2026-04-12T20:57:04.365924] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam117/clips/2026/04/13/cam117_20260413T005704Z.mp4
+[tls @ 0x7feb4c40e300] IO error: End of file
+[https @ 0x7feb4c604540] Error reading HTTP response: End of file
+[tls @ 0x7feb4c413d00] IO error: End of file
+[https @ 0x7feb4c414800] Error reading HTTP response: End of file
+[tls @ 0x7feb4c538c80] IO error: End of file
+[https @ 0x7feb4c533480] Error reading HTTP response: End of file
+[tls @ 0x7feb4c519040] IO error: End of file
+[https @ 0x7feb4c5199c0] Error reading HTTP response: End of file
+[2026-04-12T20:57:26.331684] Recorder thread stopped

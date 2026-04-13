@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ camera.name }} — {{ replay_window_hours }}-Hour Replay</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions .secondary {
+            padding: 8px 16px;
+            min-height: 40px;
+        }
+
+        .hero h1 {
+            margin-bottom: 10px;
+        }
+
+        .hero .lead {
+            margin-bottom: 14px;
+        }
+
+        .replay-chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .range-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .input-group input {
+            width: 100%;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 0.95rem;
+        }
+
+        .quick-range-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .quick-range-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid var(--border);
+            padding: 11px 12px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .current-camera-subtitle {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .archive-message {
+            margin-top: 14px;
+        }
+
+        .sidebar-card,
+        .notes,
+        .notes li {
+            min-width: 0;
+        }
+
+        .notes li {
+            margin-bottom: 8px;
+        }
+
+        .notes strong {
+            color: var(--text);
+        }
+
+        .archive-detail-value {
+            display: inline-block;
+            max-width: 100%;
+            min-width: 0;
+            vertical-align: top;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .archive-url-value {
+            display: block;
+            margin-top: 6px;
+            line-height: 1.45;
+        }
+
+        .replay-access-note {
+            color: #bfdbfe;
+            line-height: 1.5;
+        }
+
+        .replay-camera-panel {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+            min-width: 0;
+        }
+
+        .replay-camera-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .replay-camera-panel-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .replay-camera-list-shell {
+            height: 220px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        .replay-camera-list {
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            display: grid;
+            gap: 10px;
+            padding-right: 4px;
+            min-width: 0;
+        }
+
+        .replay-camera-item {
+            width: 100%;
+            text-align: left;
+            padding: 14px 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            transition: 0.2s ease;
+            min-width: 0;
+        }
+
+        .replay-camera-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .replay-camera-item.active {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.28);
+        }
+
+        .replay-camera-item-title {
+            display: block;
+            font-size: 0.98rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .replay-camera-item-location {
+            display: block;
+            color: var(--muted);
+            line-height: 1.45;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        @media (max-width: 920px) {
+            .range-grid,
+            .quick-range-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>Replay Archive</h1>
+        <div class="header-actions">
+            <button type="button" class="secondary" onclick="window.location.href='{{ url_for('home') }}'">Map</button>
+            {% if session.get('role') == 'user' %}
+            <button type="button" class="secondary" onclick="window.location.href='{{ url_for('user_page') }}'">Dashboard</button>
+            {% elif session.get('role') == 'admin' %}
+            <button type="button" class="secondary" onclick="window.location.href='{{ url_for('admin') }}'">Admin</button>
+            {% endif %}
+            {% if session.get('user') %}
+            <button type="button" class="login-btn" onclick="window.location.href='{{ url_for('logout') }}'">
+                Logout ({{ session['user'] }})
+            </button>
+            {% else %}
+            <button type="button" class="login-btn" onclick="window.location.href='{{ url_for('login') }}'">Login</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <main class="page">
+        <section class="hero card">
+            <p class="eyebrow">Rolling {{ replay_window_hours }}-Hour Archive</p>
+            <h1>{{ camera.name }}</h1>
+            <p class="lead">{{ camera.location }}</p>
+            <div class="replay-chip-row">
+                <span class="badge">Camera #{{ camera.id or '—' }}</span>
+                <span class="badge">{{ camera.camera_site or 'Unknown site' }}</span>
+                <span id="heroArchiveBadge" class="badge">Checking archive…</span>
+            </div>
+        </section>
+
+        <section class="player-layout">
+            <div class="card player-card">
+                <div class="player-header">
+                    <div class="current-camera-block">
+                        <h2 id="currentCameraTitle">Replay window</h2>
+                        <p id="currentCameraSubtitle" class="current-camera-subtitle">Choose a range inside the saved archive and load it into one combined MP4 video.</p>
+                    </div>
+                    <span id="playerTypeBadge" class="badge">Replay</span>
+                </div>
+
+                <div class="video-shell">
+                    <video
+                        id="videoPlayer"
+                        controls
+                        playsinline
+                        preload="metadata"
+                        crossorigin="anonymous"
+                    ></video>
+                </div>
+
+                <p id="playerStatus" class="status">Loading archive status…</p>
+
+                <section class="replay-camera-panel" aria-labelledby="replayCameraListHeading">
+                    <div class="replay-camera-panel-header">
+                        <h3 id="replayCameraListHeading">Camera list</h3>
+                        <span id="replayCameraCount" class="badge">—</span>
+                    </div>
+                    <div class="replay-camera-list-shell">
+                        <div id="replayCameraList" class="replay-camera-list">
+                            <p class="empty-state">Loading cameras…</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <aside class="card sidebar-card">
+                <h2>Replay controls</h2>
+                {% if can_watch_replay %}
+                <p class="sidebar-text">This local archive is built from one-minute MP4 clips. When you load a replay range, the app combines the matching clips into one continuous MP4 video.</p>
+                {% else %}
+                <p class="sidebar-text replay-access-note">Recorded footage requires login. Guests can still watch the live stream for this camera.</p>
+                {% endif %}
+
+                <div class="range-grid">
+                    <div class="input-group">
+                        <label for="startInput">Start time</label>
+                        <input id="startInput" type="datetime-local" step="1">
+                    </div>
+                    <div class="input-group">
+                        <label for="endInput">End time</label>
+                        <input id="endInput" type="datetime-local" step="1">
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    <button id="loadReplayBtn" type="button">Load replay</button>
+                    <button id="watchLiveBtn" type="button" class="secondary">Watch live</button>
+                </div>
+
+                <div class="quick-range-grid">
+                    <button type="button" class="quick-range-btn" data-minutes="15">Last 15 min</button>
+                    <button type="button" class="quick-range-btn" data-minutes="60">Last 1 hour</button>
+                    <button type="button" class="quick-range-btn" data-minutes="360">Last 6 hours</button>
+                    <button type="button" class="quick-range-btn" data-minutes="720">Last 12 hours</button>
+                    <button type="button" class="quick-range-btn" data-minutes="1440">Last 24 hours</button>
+                    <button type="button" class="quick-range-btn" data-minutes="4320">Last 72 hours</button>
+                </div>
+
+                <p id="archiveMessage" class="status archive-message">Checking how much replay is available…</p>
+
+                <hr>
+
+                <h2>Archive details</h2>
+                <ul class="notes">
+                    <li><strong>Earliest saved video:</strong> <span id="earliestText" class="archive-detail-value">—</span></li>
+                    <li><strong>Latest saved video:</strong> <span id="latestText" class="archive-detail-value">—</span></li>
+                    <li><strong>Saved MP4 clips:</strong> <span id="clipCountText" class="archive-detail-value">—</span></li>
+                    <li><strong>Recorder status:</strong> <span id="recorderStateText" class="archive-detail-value">—</span></li>
+                    <li><strong>Live feed URL:</strong> <span id="liveUrlText" class="archive-detail-value archive-url-value">—</span></li>
+                </ul>
+            </aside>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script>
+        const camera = {{ camera|tojson }};
+        const canWatchReplay = {{ can_watch_replay|default(false)|tojson }};
+        const initialReplayStatus = {{ replay_status|tojson }};
+        const initialReplayCameras = {{ replay_cameras|default([], true)|tojson }};
+        const statusEndpoint = {{ url_for('replay_status_api', camera_ref=camera.camera_site or camera.id)|tojson }};
+        const replayVideoEndpoint = {{ url_for('replay_video_api', camera_ref=camera.camera_site or camera.id)|tojson }};
+
+        const player = document.getElementById('videoPlayer');
+        const badgeEl = document.getElementById('playerTypeBadge');
+        const statusEl = document.getElementById('playerStatus');
+        const archiveMessageEl = document.getElementById('archiveMessage');
+        const heroArchiveBadgeEl = document.getElementById('heroArchiveBadge');
+        const titleEl = document.getElementById('currentCameraTitle');
+        const subtitleEl = document.getElementById('currentCameraSubtitle');
+        const startInput = document.getElementById('startInput');
+        const endInput = document.getElementById('endInput');
+        const loadReplayBtn = document.getElementById('loadReplayBtn');
+        const watchLiveBtn = document.getElementById('watchLiveBtn');
+        const earliestTextEl = document.getElementById('earliestText');
+        const latestTextEl = document.getElementById('latestText');
+        const clipCountTextEl = document.getElementById('clipCountText');
+        const recorderStateTextEl = document.getElementById('recorderStateText');
+        const liveUrlTextEl = document.getElementById('liveUrlText');
+        const quickRangeButtons = Array.from(document.querySelectorAll('.quick-range-btn'));
+        const replayCameraListEl = document.getElementById('replayCameraList');
+        const replayCameraCountEl = document.getElementById('replayCameraCount');
+
+        let hlsInstance = null;
+        let replayStatus = initialReplayStatus || {};
+        let currentReplay = null;
+        let replayLoadInFlight = false;
+        let replayRequestToken = 0;
+        let replayCameraItems = [];
+        let exactRangeState = {
+            startIso: '',
+            endIso: '',
+        };
+
+        function setBadge(text) {
+            badgeEl.textContent = text;
+        }
+
+        function setStatus(message, type = 'normal') {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function setArchiveMessage(message, type = 'normal') {
+            archiveMessageEl.textContent = message;
+            archiveMessageEl.className = `status archive-message ${type}`;
+        }
+
+        function setHeroArchiveBadge(text) {
+            heroArchiveBadgeEl.textContent = text;
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function replayCameraReference(item) {
+            const text = String(
+                (item && (item.recording_id || item.camera_site || item.id || item.camera_id || '')) || ''
+            ).trim();
+            if (!text) {
+                return '';
+            }
+
+            const streamMatch = text.match(/(?:^|\/)(cam\d+)(?:\.stream)?(?:\/|$|\?)/i);
+            if (streamMatch) {
+                return streamMatch[1].toLowerCase();
+            }
+
+            const directMatch = text.match(/\b(cam\d+)\b/i);
+            if (directMatch) {
+                return directMatch[1].toLowerCase();
+            }
+
+            const numericMatch = text.match(/^\d+$/);
+            if (numericMatch) {
+                return `cam${numericMatch[0]}`;
+            }
+
+            return text.toLowerCase();
+        }
+
+        function normalizeReplayCameraItem(item) {
+            const raw = item && typeof item === 'object' ? item : {};
+            const replayRef = replayCameraReference(raw);
+            const rawId = String(raw.id != null ? raw.id : (raw.camera_id != null ? raw.camera_id : '')).trim();
+            const displayId = rawId || (replayRef ? replayRef.replace(/^cam/i, '') : '—');
+            const location = String(raw.location || raw.address || raw.name || 'Location unavailable').trim() || 'Location unavailable';
+            const numericId = Number(displayId);
+
+            return {
+                id: displayId,
+                replay_ref: replayRef,
+                location,
+                sort_value: Number.isFinite(numericId) ? numericId : Number.MAX_SAFE_INTEGER,
+            };
+        }
+
+        function normalizeReplayCameraList(items) {
+            const merged = Array.isArray(items) ? items.map(normalizeReplayCameraItem) : [];
+            merged.push(normalizeReplayCameraItem(camera));
+
+            const seen = new Set();
+            return merged.filter((item) => {
+                const key = item.replay_ref || `id:${item.id}`;
+                if (!key || seen.has(key)) {
+                    return false;
+                }
+                seen.add(key);
+                return true;
+            }).sort((first, second) => {
+                if (first.sort_value !== second.sort_value) {
+                    return first.sort_value - second.sort_value;
+                }
+                return first.location.localeCompare(second.location, undefined, {
+                    numeric: true,
+                    sensitivity: 'base',
+                });
+            });
+        }
+
+        function currentReplayCameraReference() {
+            return replayCameraReference(camera);
+        }
+
+        function replayPageUrlForCamera(item) {
+            if (!item || !item.replay_ref) {
+                return '';
+            }
+            return `/replay/${encodeURIComponent(item.replay_ref)}`;
+        }
+
+        function renderReplayCameraList() {
+            if (!replayCameraListEl) {
+                return;
+            }
+
+            replayCameraListEl.innerHTML = '';
+
+            if (replayCameraCountEl) {
+                replayCameraCountEl.textContent = `${replayCameraItems.length} camera${replayCameraItems.length === 1 ? '' : 's'}`;
+            }
+
+            if (!replayCameraItems.length) {
+                replayCameraListEl.innerHTML = '<p class="empty-state">No cameras are available.</p>';
+                return;
+            }
+
+            const currentReference = currentReplayCameraReference();
+
+            replayCameraItems.forEach((item) => {
+                const button = document.createElement('button');
+                const isActive = item.replay_ref === currentReference;
+                button.type = 'button';
+                button.className = `replay-camera-item${isActive ? ' active' : ''}`;
+                button.innerHTML = `
+                    <span class="replay-camera-item-title">Camera #${escapeHtml(item.id)}</span>
+                    <span class="replay-camera-item-location">${escapeHtml(item.location)}</span>
+                `;
+
+                if (isActive || !item.replay_ref) {
+                    button.disabled = isActive;
+                } else {
+                    button.addEventListener('click', () => {
+                        const targetUrl = replayPageUrlForCamera(item);
+                        if (targetUrl) {
+                            window.location.href = targetUrl;
+                        }
+                    });
+                }
+
+                replayCameraListEl.appendChild(button);
+            });
+        }
+
+        async function loadReplayCameraList() {
+            replayCameraItems = normalizeReplayCameraList(initialReplayCameras);
+            renderReplayCameraList();
+
+            if (replayCameraItems.length > 1) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/cameras', {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                });
+                if (!response.ok) {
+                    throw new Error(`Camera request failed with ${response.status}.`);
+                }
+                const data = await response.json();
+                replayCameraItems = normalizeReplayCameraList(data.cameras || []);
+                renderReplayCameraList();
+            } catch (_error) {
+                renderReplayCameraList();
+            }
+        }
+
+        function looksLikeHls(url) {
+            return /\.m3u8($|[?#])/i.test(url) || String(url).toLowerCase().includes('m3u8');
+        }
+
+        function destroyPlayerSource() {
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+
+            try {
+                player.pause();
+            } catch (_error) {}
+
+            player.removeAttribute('src');
+            while (player.firstChild) {
+                player.removeChild(player.firstChild);
+            }
+            player.load();
+        }
+
+        function attemptAutoplay(fallbackLabel) {
+            const playPromise = player.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => {
+                    setStatus(`${fallbackLabel} loaded. Press play if autoplay is blocked.`, 'normal');
+                });
+            }
+        }
+
+        function loadDirectSource(url, modeLabel, autoplay = true) {
+            destroyPlayerSource();
+            player.src = url;
+            player.load();
+            setBadge(modeLabel);
+            setStatus(`Loading ${modeLabel.toLowerCase()} video…`, 'normal');
+            if (autoplay) {
+                attemptAutoplay(modeLabel === 'Live' ? 'Live feed' : 'Video');
+            }
+        }
+
+        function loadHlsSource(url, modeLabel) {
+            destroyPlayerSource();
+
+            if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                player.src = url;
+                player.load();
+                setBadge(modeLabel);
+                setStatus(`Loading ${modeLabel.toLowerCase()} stream…`, 'normal');
+                attemptAutoplay(modeLabel === 'Live' ? 'Live feed' : 'Stream');
+                return;
+            }
+
+            if (window.Hls && Hls.isSupported()) {
+                hlsInstance = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: false,
+                });
+
+                hlsInstance.loadSource(url);
+                hlsInstance.attachMedia(player);
+                setBadge(modeLabel);
+                setStatus(`Loading ${modeLabel.toLowerCase()} stream…`, 'normal');
+
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    attemptAutoplay(modeLabel === 'Live' ? 'Live feed' : 'Stream');
+                });
+
+                hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
+                    if (data.fatal) {
+                        setStatus('The selected stream could not be played.', 'error');
+                        if (hlsInstance) {
+                            hlsInstance.destroy();
+                            hlsInstance = null;
+                        }
+                    }
+                });
+                return;
+            }
+
+            setStatus('This browser does not support HLS playback.', 'error');
+        }
+
+        function loadStream(url, modeLabel) {
+            currentReplay = null;
+
+            if (!url) {
+                setStatus('No stream URL is available for this camera.', 'error');
+                return;
+            }
+
+            if (looksLikeHls(url)) {
+                loadHlsSource(url, modeLabel);
+            } else {
+                loadDirectSource(url, modeLabel, true);
+            }
+        }
+
+        function loadLive() {
+            replayRequestToken += 1;
+            setReplayLoadingState(false);
+            currentReplay = null;
+            titleEl.textContent = 'Live feed';
+            subtitleEl.textContent = 'Streaming the current live camera feed.';
+
+            if (!camera.stream_url) {
+                setStatus('No live feed URL is available for this camera.', 'error');
+                return;
+            }
+
+            loadStream(camera.stream_url, 'Live');
+        }
+
+        function formatLocalDisplay(isoText) {
+            if (!isoText) {
+                return '—';
+            }
+
+            const date = new Date(isoText);
+            if (Number.isNaN(date.getTime())) {
+                return '—';
+            }
+
+            return date.toLocaleString();
+        }
+
+        function isoToLocalInputValue(isoText) {
+            if (!isoText) {
+                return '';
+            }
+
+            const date = new Date(isoText);
+            if (Number.isNaN(date.getTime())) {
+                return '';
+            }
+
+            const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+            return localDate.toISOString().slice(0, 19);
+        }
+
+        function localInputValueToIso(value) {
+            const text = String(value || '').trim();
+            if (!text) {
+                return '';
+            }
+
+            const normalizedText = text.length === 16 ? `${text}:00` : text;
+            const date = new Date(normalizedText);
+            if (Number.isNaN(date.getTime())) {
+                return '';
+            }
+            return date.toISOString();
+        }
+
+        function formatDurationSeconds(seconds) {
+            const totalSeconds = Math.max(0, Math.round(Number(seconds) || 0));
+            if (!totalSeconds) {
+                return '0 seconds';
+            }
+
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            const parts = [];
+
+            if (hours) {
+                parts.push(`${hours} hour${hours === 1 ? '' : 's'}`);
+            }
+            if (minutes) {
+                parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
+            }
+            if (secs || !parts.length) {
+                parts.push(`${secs} second${secs === 1 ? '' : 's'}`);
+            }
+
+            return parts.join(' ');
+        }
+
+        function syncInputBounds() {
+            const minValue = isoToLocalInputValue(replayStatus.earliest_available);
+            const maxValue = isoToLocalInputValue(replayStatus.latest_available);
+
+            if (minValue) {
+                startInput.min = minValue;
+                endInput.min = minValue;
+            } else {
+                startInput.removeAttribute('min');
+                endInput.removeAttribute('min');
+            }
+
+            if (maxValue) {
+                startInput.max = maxValue;
+                endInput.max = maxValue;
+            } else {
+                startInput.removeAttribute('max');
+                endInput.removeAttribute('max');
+            }
+        }
+
+        function setExactRange(range, syncInputs = true) {
+            exactRangeState = {
+                startIso: range && range.startIso ? range.startIso : '',
+                endIso: range && range.endIso ? range.endIso : '',
+            };
+
+            if (syncInputs) {
+                startInput.value = isoToLocalInputValue(exactRangeState.startIso);
+                endInput.value = isoToLocalInputValue(exactRangeState.endIso);
+            }
+        }
+
+        function rangeFromInputsOrState() {
+            const inputStartIso = localInputValueToIso(startInput.value);
+            const inputEndIso = localInputValueToIso(endInput.value);
+            if (!inputStartIso || !inputEndIso) {
+                return null;
+            }
+
+            const exactInputStart = isoToLocalInputValue(exactRangeState.startIso);
+            const exactInputEnd = isoToLocalInputValue(exactRangeState.endIso);
+            if (
+                exactRangeState.startIso
+                && exactRangeState.endIso
+                && startInput.value === exactInputStart
+                && endInput.value === exactInputEnd
+            ) {
+                return {
+                    startIso: exactRangeState.startIso,
+                    endIso: exactRangeState.endIso,
+                };
+            }
+
+            return {
+                startIso: inputStartIso,
+                endIso: inputEndIso,
+            };
+        }
+
+        function defaultReplayRange() {
+            if (replayStatus.default_start && replayStatus.default_end) {
+                return {
+                    startIso: replayStatus.default_start,
+                    endIso: replayStatus.default_end,
+                };
+            }
+            return buildQuickRange(30);
+        }
+
+        function setReplayLoadingState(isLoading) {
+            replayLoadInFlight = Boolean(isLoading);
+            startInput.disabled = !canWatchReplay;
+            endInput.disabled = !canWatchReplay;
+            loadReplayBtn.disabled = replayLoadInFlight || !replayStatus.has_archive || !canWatchReplay;
+            quickRangeButtons.forEach((button) => {
+                button.disabled = replayLoadInFlight || !replayStatus.has_archive || !canWatchReplay;
+            });
+            watchLiveBtn.disabled = !camera.stream_url;
+        }
+
+        function applyReplayStatus(status) {
+            replayStatus = status || {};
+
+            if (!canWatchReplay) {
+                earliestTextEl.textContent = 'Login required';
+                latestTextEl.textContent = 'Login required';
+                clipCountTextEl.textContent = 'Login required';
+                recorderStateTextEl.textContent = 'Live only';
+                liveUrlTextEl.textContent = camera.stream_url || 'Unavailable';
+                setHeroArchiveBadge('Live only');
+                setArchiveMessage('Log in to watch recorded footage. Guests can only watch live video.', 'normal');
+                setReplayLoadingState(false);
+                return;
+            }
+
+            const hasArchive = Boolean(replayStatus.has_archive);
+            const isRecording = Boolean(replayStatus.recording_active);
+            const rawRecorderState = String(replayStatus.recorder_state || '').trim();
+            const recorderText = rawRecorderState
+                ? rawRecorderState.replace(/_/g, ' ')
+                : (isRecording ? 'running' : 'stopped');
+
+            earliestTextEl.textContent = formatLocalDisplay(replayStatus.earliest_available);
+            latestTextEl.textContent = formatLocalDisplay(replayStatus.latest_available);
+            clipCountTextEl.textContent = String(replayStatus.clip_count || 0);
+            recorderStateTextEl.textContent = recorderText;
+            liveUrlTextEl.textContent = camera.stream_url || 'Unavailable';
+            syncInputBounds();
+
+            if (hasArchive) {
+                setHeroArchiveBadge(isRecording ? 'Archive recording' : 'Archive available');
+                setArchiveMessage(
+                    `Replay is available from ${formatLocalDisplay(replayStatus.earliest_available)} to ${formatLocalDisplay(replayStatus.latest_available)}.`,
+                    isRecording ? 'success' : 'normal'
+                );
+
+                if (!startInput.value || !endInput.value) {
+                    const range = defaultReplayRange();
+                    if (range) {
+                        setExactRange(range, true);
+                    }
+                }
+            } else {
+                setHeroArchiveBadge(isRecording ? 'Recorder warming up' : 'No archive yet');
+                setArchiveMessage('No recorded MP4 files are available yet. Start recorder_service.py and wait few minutes', 'error');
+            }
+
+            setReplayLoadingState(replayLoadInFlight);
+        }
+
+        function validateReplayRange(explicitRange = null) {
+            if (!canWatchReplay) {
+                setStatus('Log in to watch recorded footage. Guests can only watch live video.', 'error');
+                return null;
+            }
+
+            const resolvedRange = explicitRange || rangeFromInputsOrState();
+            if (!resolvedRange || !resolvedRange.startIso || !resolvedRange.endIso) {
+                setStatus('Please choose both a start time and an end time.', 'error');
+                return null;
+            }
+
+            const startDate = new Date(resolvedRange.startIso);
+            const endDate = new Date(resolvedRange.endIso);
+            if (startDate >= endDate) {
+                setStatus('The replay start time must be earlier than the end time.', 'error');
+                return null;
+            }
+
+            return resolvedRange;
+        }
+
+        async function parseJsonResponse(response) {
+            const responseText = await response.text();
+            if (!responseText) {
+                return {};
+            }
+
+            try {
+                return JSON.parse(responseText);
+            } catch (_error) {
+                return { error: responseText };
+            }
+        }
+
+        async function loadReplay(explicitRange = null) {
+            if (!replayStatus.has_archive) {
+                setStatus('There is no recorded video for this camera yet. Wait few minutes', 'error');
+                return;
+            }
+
+            const validatedRange = validateReplayRange(explicitRange);
+            if (!validatedRange) {
+                return;
+            }
+
+            const { startIso, endIso } = validatedRange;
+            setExactRange({ startIso, endIso }, true);
+
+            const requestToken = ++replayRequestToken;
+            const params = new URLSearchParams({ start: startIso, end: endIso });
+            setReplayLoadingState(true);
+            currentReplay = null;
+            setStatus('Combining saved clips into one replay video', 'normal');
+
+            try {
+                const response = await fetch(`${replayVideoEndpoint}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                });
+                const data = await parseJsonResponse(response);
+
+                if (requestToken !== replayRequestToken) {
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Could not build the replay video.');
+                }
+
+                const video = data.video || {};
+                if (!video.url) {
+                    throw new Error('The replay video could not be created.');
+                }
+
+                currentReplay = {
+                    url: video.url,
+                    duration_seconds: Number(video.duration_seconds || 0),
+                    clip_count: Number(video.clip_count || 0),
+                    requested_start: data.requested_start || startIso,
+                    requested_end: data.requested_end || endIso,
+                    render_mode: String(video.render_mode || ''),
+                    cached: Boolean(video.cached),
+                };
+
+                setExactRange(
+                    {
+                        startIso: currentReplay.requested_start,
+                        endIso: currentReplay.requested_end,
+                    },
+                    true
+                );
+
+                titleEl.textContent = 'Replay window';
+                subtitleEl.textContent = `${formatLocalDisplay(currentReplay.requested_start)} → ${formatLocalDisplay(currentReplay.requested_end)} • ${formatDurationSeconds(currentReplay.duration_seconds)} video`;
+                loadDirectSource(currentReplay.url, 'Replay', true);
+
+                const sourceText = currentReplay.clip_count > 0
+                    ? ` built from ${currentReplay.clip_count} saved clip${currentReplay.clip_count === 1 ? '' : 's'}`
+                    : '';
+                const cacheText = currentReplay.cached ? ' (cached)' : '';
+                setStatus(
+                    `Loading ${formatDurationSeconds(currentReplay.duration_seconds)} replay video${sourceText}${cacheText}…`,
+                    'normal'
+                );
+            } catch (error) {
+                if (requestToken !== replayRequestToken) {
+                    return;
+                }
+                currentReplay = null;
+                setStatus(error.message || 'Could not load the replay video.', 'error');
+            } finally {
+                if (requestToken === replayRequestToken) {
+                    setReplayLoadingState(false);
+                }
+            }
+        }
+
+        function buildQuickRange(minutes) {
+            if (!replayStatus.has_archive) {
+                return null;
+            }
+
+            const latest = replayStatus.latest_available ? new Date(replayStatus.latest_available) : new Date();
+            const earliest = replayStatus.earliest_available ? new Date(replayStatus.earliest_available) : null;
+            if (Number.isNaN(latest.getTime())) {
+                return null;
+            }
+
+            let start = new Date(latest.getTime() - (Number(minutes) * 60000));
+            if (earliest && !Number.isNaN(earliest.getTime()) && start < earliest) {
+                start = earliest;
+            }
+
+            return {
+                startIso: start.toISOString(),
+                endIso: latest.toISOString(),
+            };
+        }
+
+        async function refreshReplayStatus() {
+            if (!canWatchReplay) {
+                return;
+            }
+
+            try {
+                const response = await fetch(statusEndpoint, {
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store',
+                });
+                if (!response.ok) {
+                    throw new Error(`Status request failed with ${response.status}.`);
+                }
+                const data = await response.json();
+                applyReplayStatus(data.status || {});
+            } catch (error) {
+                setArchiveMessage(error.message || 'Unable to load archive status.', 'error');
+            }
+        }
+
+        function handleManualRangeInput() {
+            const manualRange = {
+                startIso: localInputValueToIso(startInput.value),
+                endIso: localInputValueToIso(endInput.value),
+            };
+            if (manualRange.startIso && manualRange.endIso) {
+                exactRangeState = manualRange;
+            }
+        }
+
+        loadReplayBtn.addEventListener('click', () => loadReplay());
+        watchLiveBtn.addEventListener('click', loadLive);
+
+        quickRangeButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const range = buildQuickRange(button.dataset.minutes || '15');
+                if (!range) {
+                    return;
+                }
+                setExactRange(range, true);
+                loadReplay(range);
+            });
+        });
+
+        startInput.addEventListener('input', handleManualRangeInput);
+        endInput.addEventListener('input', handleManualRangeInput);
+        startInput.addEventListener('change', handleManualRangeInput);
+        endInput.addEventListener('change', handleManualRangeInput);
+
+        player.addEventListener('playing', () => {
+            if (currentReplay) {
+                const sourceText = currentReplay.clip_count > 0
+                    ? ` built from ${currentReplay.clip_count} saved clip${currentReplay.clip_count === 1 ? '' : 's'}`
+                    : '';
+                setStatus(
+                    `Now playing ${formatDurationSeconds(currentReplay.duration_seconds)} replay video${sourceText} for ${camera.name}.`,
+                    'success'
+                );
+            } else {
+                setStatus(`Now playing ${badgeEl.textContent.toLowerCase()} video for ${camera.name}.`, 'success');
+            }
+        });
+
+        player.addEventListener('ended', () => {
+            if (currentReplay) {
+                setStatus(`Replay finished for ${camera.name}.`, 'success');
+            }
+        });
+
+        player.addEventListener('error', () => {
+            setStatus('Could not play the selected video.', 'error');
+        });
+
+        applyReplayStatus(initialReplayStatus);
+        if (canWatchReplay && initialReplayStatus && initialReplayStatus.has_archive) {
+            const initialRange = defaultReplayRange();
+            if (initialRange) {
+                setExactRange(initialRange, true);
+                loadReplay(initialRange);
+            }
+        } else if (camera.stream_url) {
+            if (!canWatchReplay) {
+                setStatus('Guests can only watch the live stream', 'normal');
+            } else {
+                setStatus('No replay has been loaded yet.', 'normal');
+            }
+            loadLive();
+        } else {
+            setStatus(
+                canWatchReplay ? 'No replay has been loaded yet.' : 'No live feed URL is available for this camera.',
+                camera.stream_url ? 'normal' : 'error'
+            );
+        }
+
+        loadReplayCameraList();
+
+        if (canWatchReplay) {
+            window.setInterval(refreshReplayStatus, 60000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+{
+  "user1": {
+    "username": "user1",
+    "email": "user@email.com",
+    "password_hash": "scrypt:32768:8:1$NgJk5Iqr337AeiPe$e15bc9904bc750f4762fdee0b157b977778c3025109cccfa230fdc99963ffe7120ec34ff4f9c78d1af467382627821bce48ebbc87c43c648af7c0d92c9590234",
+    "favorites": [
+      {
+        "id": "221",
+        "recording_id": "cam221",
+        "camera_site": "cam221",
+        "favorite_key": "site:cam221",
+        "name": "Camera 221",
+        "location": "Washington Blvd @ Brookside CAM-1 - 264",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam221.stream/playlist.m3u8",
+        "lat": 38.87761,
+        "lng": -77.086552,
+        "status": "ONLINE"
+      },
+      {
+        "id": "257",
+        "recording_id": "cam257",
+        "camera_site": "cam257",
+        "favorite_key": "site:cam257",
+        "name": "Camera 257",
+        "location": "S Courthouse Rd @ 2nd S - 233",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam257.stream/playlist.m3u8",
+        "lat": 38.87167,
+        "lng": -77.081839,
+        "status": "ONLINE"
+      }
+    ],
+    "history": [
+      {
+        "camera_id": "225",
+        "camera_site": "cam225",
+        "name": "Camera 225",
+        "location": "Old Dominion Dr @ Williamsburg - 271",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam225.stream/playlist.m3u8",
+        "timestamp": "2026-04-12 11:19:05 PM EDT"
+      },
+      {
+        "camera_id": "221",
+        "camera_site": "cam221",
+        "name": "Camera 221",
+        "location": "Washington Blvd @ Brookside CAM-1 - 264",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam221.stream/playlist.m3u8",
+        "timestamp": "2026-04-12 09:08:15 PM EDT"
+      }
+    ]
+  },
+  "newuser": {
+    "username": "newUser",
+    "email": "user2@email.com",
+    "password_hash": "scrypt:32768:8:1$mnFtm3D48nfbfrWR$fd62b8a449287cdd992c929890e40771ba77a867a5db9c62b271330cf3a0da658ba54aa238e60cd51c41d16b3178da8dedc9f71c0e324450e5f168b667b1f2ba",
+    "favorites": [
+      {
+        "id": "221",
+        "recording_id": "cam221",
+        "camera_site": "cam221",
+        "favorite_key": "site:cam221",
+        "name": "Camera 221",
+        "location": "Washington Blvd @ Brookside CAM-1 - 264",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam221.stream/playlist.m3u8",
+        "lat": 38.87761,
+        "lng": -77.086552,
+        "status": "ONLINE"
+      }
+    ],
+    "history": [
+      {
+        "camera_id": "222",
+        "camera_site": "cam222",
+        "name": "Camera 222",
+        "location": "Williamsburg Blvd @ N Westmoreland - 266",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam222.stream/playlist.m3u8",
+        "timestamp": "2026-04-12 09:00:49 PM EDT"
+      },
+      {
+        "camera_id": "269",
+        "camera_site": "cam269",
+        "name": "Camera 269",
+        "location": "Columbia Pike @ S Scott - 030",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam269.stream/playlist.m3u8",
+        "timestamp": "2026-04-12 09:00:47 PM EDT"
+      },
+      {
+        "camera_id": "257",
+        "camera_site": "cam257",
+        "name": "Camera 257",
+        "location": "S Courthouse Rd @ 2nd S - 233",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam257.stream/playlist.m3u8",
+        "timestamp": "2026-04-12 09:00:46 PM EDT"
+      },
+      {
+        "camera_id": "221",
+        "camera_site": "cam221",
+        "name": "Camera 221",
+        "location": "Washington Blvd @ Brookside CAM-1 - 264",
+        "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam221.stream/playlist.m3u8",
+        "timestamp": "2026-04-12 09:00:43 PM EDT"
+      }
+    ]
+  }
+}

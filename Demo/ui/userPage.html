@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        :root {
+            --dashboard-header-height: 73px;
+            --dashboard-gap: 20px;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions .secondary {
+            padding: 8px 16px;
+            min-height: 40px;
+        }
+
+        .welcome-chip {
+            display: inline-flex;
+            align-items: center;
+            min-height: 40px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            color: #e5e7eb;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.5fr);
+            gap: var(--dashboard-gap);
+            padding: var(--dashboard-gap);
+            min-height: calc(100vh - var(--dashboard-header-height));
+            box-sizing: border-box;
+            align-items: start;
+        }
+
+        .map-column,
+        .sidebar {
+            min-width: 0;
+            min-height: 0;
+            align-self: start;
+        }
+
+        .map-shell {
+            position: relative;
+            height: calc(100vh - var(--dashboard-header-height) - (var(--dashboard-gap) * 2));
+            min-height: 520px;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: var(--dashboard-gap);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            height: calc(100vh - var(--dashboard-header-height) - (var(--dashboard-gap) * 2));
+        }
+
+        .sidebar-section {
+            flex: 1 1 0;
+            min-height: 0;
+            padding: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+
+        .section-header p {
+            margin: 6px 0 0;
+            color: #9ca3af;
+            line-height: 1.45;
+            font-size: 0.92rem;
+        }
+
+        .small-btn {
+            padding: 10px 12px;
+            font-size: 0.86rem;
+            white-space: nowrap;
+        }
+
+        .list-shell {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            padding-right: 4px;
+        }
+
+        .saved-list,
+        .history-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .saved-item,
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .saved-item-info,
+        .history-item-info {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .saved-item-title,
+        .history-item-top {
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .saved-item-meta,
+        .history-item-location,
+        .history-item-time {
+            margin-top: 6px;
+            color: #9ca3af;
+            line-height: 1.4;
+            font-size: 0.92rem;
+            word-break: break-word;
+        }
+
+        .saved-item-actions,
+        .history-item-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .saved-item-actions button,
+        .history-item-actions button {
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 0.86rem;
+            white-space: nowrap;
+        }
+
+        .ghost-btn {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .ghost-btn:hover {
+            background: rgba(255, 255, 255, 0.10);
+        }
+
+        .danger-btn {
+            background: rgba(248, 113, 113, 0.14);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.24);
+        }
+
+        .danger-btn:hover {
+            background: rgba(248, 113, 113, 0.18);
+        }
+
+        .camera-popup {
+            width: 320px;
+        }
+
+        .camera-popup .popup-name {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #111;
+        }
+
+        .camera-popup .popup-meta {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .camera-popup .popup-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .camera-popup .popup-favorite-btn,
+        .camera-popup .popup-replay-link {
+            flex: 1 1 0;
+            min-width: 0;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .camera-popup .popup-favorite-btn {
+            border: 1px solid rgba(37, 99, 235, 0.18);
+            background: #2563eb;
+            color: white;
+        }
+
+        .camera-popup .popup-favorite-btn.saved {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.28);
+            color: #14532d;
+        }
+
+        .camera-popup .popup-replay-link {
+            border: 1px solid rgba(17, 24, 39, 0.12);
+            background: rgba(17, 24, 39, 0.08);
+            color: #111827;
+        }
+
+        .camera-popup .popup-replay-link:hover {
+            background: rgba(17, 24, 39, 0.12);
+        }
+
+        .camera-popup video {
+            width: 100%;
+            border-radius: 8px;
+            background: black;
+        }
+
+        @media (max-width: 1080px) {
+            .user-layout {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+            }
+
+            .map-shell {
+                height: 65vh;
+                min-height: 420px;
+            }
+
+            .sidebar-section {
+                min-height: 320px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .saved-item,
+            .history-item,
+            .section-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .saved-item-actions,
+            .history-item-actions {
+                width: 100%;
+            }
+
+            .saved-item-actions button,
+            .history-item-actions button {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>User Dashboard</h1>
+        <div class="header-actions">
+            <span class="welcome-chip">Signed in as {{ session['user'] }}</span>
+            <button type="button" class="login-btn" onclick="window.location.href='/logout'">Logout</button>
+        </div>
+    </div>
+
+    <main class="user-layout">
+        <section class="map-column">
+            <div class="map-shell">
+                <div id="map"></div>
+            </div>
+        </section>
+
+        <aside class="sidebar">
+            <section class="card sidebar-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Favorites</h2>
+                        <p>Here, your favorite camera will be displayed.</p>
+                    </div>
+                </div>
+                <div class="list-shell">
+                    <div id="favoritesList" class="saved-list"></div>
+                </div>
+            </section>
+
+            <section class="card sidebar-section">
+                <div class="section-header">
+                    <div>
+                        <h2>Browsing History</h2>
+                        <p>Here, you will see the 20 cameras that you have browsed in the past.</p>
+                    </div>
+                    <button id="clearHistoryBtn" type="button" class="secondary small-btn">Clear history</button>
+                </div>
+                <div class="list-shell">
+                    <div id="historyList" class="history-list"></div>
+                </div>
+            </section>
+        </aside>
+    </main>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script>
+        const rawServerCameras = {{ cameras|default([])|tojson }};
+        const rawCameraLookup = {{ camera_lookup|default([])|tojson }};
+        const initialFavorites = {{ favorites|default([])|tojson }};
+        const initialHistory = {{ history|default([])|tojson }};
+        const LOCAL_ADDED_KEY = 'traffic-admin-added-cameras-v2';
+        const LOCAL_DELETED_KEY = 'traffic-admin-deleted-cameras-v2';
+        const defaultCenter = [38.8816, -77.0910];
+        const defaultZoom = 13;
+        const genericLocationLabels = new Set(['', 'Arlington, VA', 'Location unavailable']);
+        const cameraLookupBySite = new Map();
+        const cameraLookupById = new Map();
+        const cameraLookupByStreamUrl = new Map();
+
+        const map = L.map('map').setView(defaultCenter, defaultZoom);
+        const markerLayer = L.layerGroup().addTo(map);
+        const favoritesListEl = document.getElementById('favoritesList');
+        const historyListEl = document.getElementById('historyList');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+
+        let cameras = [];
+        let favorites = [];
+        let historyEntries = [];
+        const markersByIdentity = new Map();
+        const historyCooldownByIdentity = new Map();
+
+        (Array.isArray(rawCameraLookup) ? rawCameraLookup : []).forEach((camera) => {
+            if (!camera || typeof camera !== 'object') {
+                return;
+            }
+
+            const normalized = {
+                site: String(camera.site || '').trim().toLowerCase(),
+                id: camera.id != null ? String(camera.id).trim() : '',
+                name: String(camera.name || '').trim(),
+                location: String(camera.location || '').trim(),
+                lat: camera.lat != null && camera.lat !== '' ? Number(camera.lat) : null,
+                lng: camera.lng != null && camera.lng !== '' ? Number(camera.lng) : null,
+                stream_url: String(camera.stream_url || '').trim(),
+                status: String(camera.status || '').trim(),
+                favorite_key: String(camera.favorite_key || '').trim()
+            };
+
+            if (normalized.site) {
+                cameraLookupBySite.set(normalized.site, normalized);
+            }
+
+            if (normalized.id) {
+                cameraLookupById.set(normalized.id, normalized);
+            }
+
+            if (normalized.stream_url) {
+                cameraLookupByStreamUrl.set(normalized.stream_url, normalized);
+            }
+        });
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function readStoredArray(key) {
+            try {
+                const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (_error) {
+                return [];
+            }
+        }
+
+        function sanitizeDomId(value) {
+            return String(value || 'camera').replace(/[^a-zA-Z0-9_-]/g, '_');
+        }
+
+        function extractCameraSite(value) {
+            const text = String(value || '').trim();
+            if (!text) {
+                return '';
+            }
+
+            const streamMatch = text.match(/(?:^|\/)(cam\d+)(?:\.stream)?(?:\/|$|\?)/i);
+            if (streamMatch) {
+                return streamMatch[1].toLowerCase();
+            }
+
+            const directMatch = text.match(/\b(cam\d+)\b/i);
+            if (directMatch) {
+                return directMatch[1].toLowerCase();
+            }
+
+            const numericMatch = text.match(/^\d+$/);
+            if (numericMatch) {
+                return `cam${numericMatch[0]}`;
+            }
+
+            return '';
+        }
+
+        function findCameraMetadata(value) {
+            const text = String(value || '').trim();
+            if (!text) {
+                return null;
+            }
+
+            if (cameraLookupByStreamUrl.has(text)) {
+                return cameraLookupByStreamUrl.get(text);
+            }
+
+            const site = extractCameraSite(text);
+            if (site && cameraLookupBySite.has(site)) {
+                return cameraLookupBySite.get(site);
+            }
+
+            const id = site ? site.replace(/^cam/i, '') : (/^\d+$/.test(text) ? text : '');
+            if (id && cameraLookupById.has(id)) {
+                return cameraLookupById.get(id);
+            }
+
+            return null;
+        }
+
+        function chooseLocation(rawLocation, lookupLocation, source) {
+            const trimmedRaw = String(rawLocation || '').trim();
+            const trimmedLookup = String(lookupLocation || '').trim();
+
+            if (source !== 'local' && trimmedLookup) {
+                return trimmedLookup;
+            }
+
+            if (trimmedRaw && !genericLocationLabels.has(trimmedRaw)) {
+                return trimmedRaw;
+            }
+
+            return trimmedLookup || trimmedRaw || 'Location unavailable';
+        }
+
+        function cameraIdentity(camera) {
+            if (!camera || typeof camera !== 'object') {
+                return '';
+            }
+
+            const favoriteKey = String(camera.favorite_key || '').trim();
+            if (favoriteKey) {
+                return favoriteKey;
+            }
+
+            const site = extractCameraSite(camera.camera_site || camera.stream_url || camera.id || camera.camera_id);
+            if (site) {
+                return `site:${site}`;
+            }
+
+            const streamUrl = String(camera.stream_url || camera.video_url || camera.url || '').trim();
+            if (streamUrl) {
+                return `url:${streamUrl}`;
+            }
+
+            const id = String(camera.id != null ? camera.id : (camera.camera_id != null ? camera.camera_id : '')).trim();
+            return id ? `id:${id}` : '';
+        }
+
+        function replayReference(camera) {
+            const site = extractCameraSite(camera && (camera.camera_site || camera.stream_url || camera.id || camera.camera_id));
+            if (site) {
+                return site;
+            }
+
+            const id = String(camera && (camera.id != null ? camera.id : (camera.camera_id != null ? camera.camera_id : '')) || '').trim();
+            return id;
+        }
+
+        function replayUrlForCamera(camera) {
+            const reference = replayReference(camera);
+            return reference ? `/replay/${encodeURIComponent(reference)}` : '';
+        }
+
+        function openReplay(camera) {
+            const replayUrl = replayUrlForCamera(camera);
+            if (!replayUrl) {
+                return;
+            }
+            window.location.href = replayUrl;
+        }
+
+        function normalizeCamera(camera, index, source) {
+            const streamUrl = String(
+                (camera && (camera.stream_url || camera.video_url || camera.url)) || ''
+            ).trim();
+            const metadata = findCameraMetadata(
+                streamUrl
+                || (camera && camera.camera_site)
+                || (camera && camera.id != null ? camera.id : (camera && camera.camera_id != null ? camera.camera_id : ''))
+            );
+            const rawId = camera && camera.id != null
+                ? camera.id
+                : camera && camera.camera_id != null
+                    ? camera.camera_id
+                    : metadata && metadata.id
+                        ? metadata.id
+                        : `${source}-${index + 1}`;
+            const rawName = String((camera && (camera.name || camera.title)) || '').trim();
+            const rawLocation = String((camera && (camera.location || camera.address)) || '').trim();
+            const rawLat = camera && camera.lat != null && camera.lat !== '' ? Number(camera.lat) : null;
+            const rawLng = camera && camera.lng != null && camera.lng !== '' ? Number(camera.lng) : null;
+            const lookupLat = metadata && Number.isFinite(metadata.lat) ? metadata.lat : null;
+            const lookupLng = metadata && Number.isFinite(metadata.lng) ? metadata.lng : null;
+            const useLookupCoordinates = source !== 'local' || !Number.isFinite(rawLat) || !Number.isFinite(rawLng);
+            const favoriteKey = cameraIdentity(camera) || (metadata && metadata.favorite_key) || '';
+            const key = camera && camera.key
+                ? String(camera.key)
+                : favoriteKey
+                    ? favoriteKey
+                    : streamUrl
+                        ? `url:${streamUrl}`
+                        : `generated:${source}:${index}`;
+
+            return {
+                id: String(rawId),
+                key,
+                favorite_key: favoriteKey,
+                domId: sanitizeDomId(key || rawId),
+                name: rawName || (metadata && metadata.name) || `Camera ${rawId}`,
+                location: chooseLocation(rawLocation, metadata && metadata.location, source),
+                stream_url: streamUrl || (metadata && metadata.stream_url) || '',
+                lat: useLookupCoordinates && lookupLat != null ? lookupLat : rawLat,
+                lng: useLookupCoordinates && lookupLng != null ? lookupLng : rawLng,
+                camera_site: metadata && metadata.site ? metadata.site : extractCameraSite(streamUrl),
+                status: String((camera && camera.status) || (metadata && metadata.status) || '').trim()
+            };
+        }
+
+        function normalizeFavoriteList(items) {
+            return (Array.isArray(items) ? items : []).map((camera, index) => normalizeCamera(camera, index, 'favorite'));
+        }
+
+        function normalizeHistoryList(items) {
+            return (Array.isArray(items) ? items : []).slice(0, 20).map((entry, index) => {
+                const camera = normalizeCamera(entry, index, 'history');
+                return {
+                    camera_id: String((entry && (entry.camera_id || entry.id)) || camera.id || '').trim(),
+                    camera_site: String((entry && entry.camera_site) || camera.camera_site || '').trim().toLowerCase(),
+                    name: String((entry && entry.name) || camera.name || 'Camera').trim() || 'Camera',
+                    location: String((entry && entry.location) || camera.location || 'Location unavailable').trim() || 'Location unavailable',
+                    stream_url: String((entry && entry.stream_url) || camera.stream_url || '').trim(),
+                    timestamp: String((entry && entry.timestamp) || '').trim()
+                };
+            });
+        }
+
+        function cameraPayload(camera) {
+            const normalized = normalizeCamera(camera, 0, 'payload');
+            return {
+                camera_id: normalized.id,
+                camera_site: normalized.camera_site,
+                favorite_key: cameraIdentity(normalized),
+                name: normalized.name,
+                location: normalized.location,
+                stream_url: normalized.stream_url,
+                lat: normalized.lat,
+                lng: normalized.lng,
+                status: normalized.status
+            };
+        }
+
+        function isDeleted(camera, deletedKeys) {
+            return deletedKeys.has(camera.key) || (camera.stream_url && deletedKeys.has(`url:${camera.stream_url}`));
+        }
+
+        function compareCameras(a, b) {
+            const aNum = Number(a.id);
+            const bNum = Number(b.id);
+
+            if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+                return aNum - bNum;
+            }
+
+            return a.name.localeCompare(b.name, undefined, {
+                numeric: true,
+                sensitivity: 'base'
+            });
+        }
+
+        function buildCameraList() {
+            const deletedKeys = new Set(readStoredArray(LOCAL_DELETED_KEY));
+            const localAddedCameras = readStoredArray(LOCAL_ADDED_KEY);
+
+            const serverCameras = Array.isArray(rawServerCameras)
+                ? rawServerCameras.map((camera, index) => normalizeCamera(camera, index, 'server'))
+                : [];
+            const addedCameras = Array.isArray(localAddedCameras)
+                ? localAddedCameras.map((camera, index) => normalizeCamera(camera, index, 'local'))
+                : [];
+
+            const merged = [...serverCameras, ...addedCameras]
+                .filter((camera) => Number.isFinite(camera.lat) && Number.isFinite(camera.lng))
+                .filter((camera) => !isDeleted(camera, deletedKeys));
+
+            const seen = new Set();
+            return merged.filter((camera) => {
+                const dedupeKey = camera.stream_url ? `stream:${camera.stream_url}` : camera.key;
+                if (seen.has(dedupeKey)) {
+                    return false;
+                }
+                seen.add(dedupeKey);
+                return true;
+            }).sort(compareCameras);
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function looksLikeHls(url) {
+            return /\.m3u8($|[?#])/i.test(url) || String(url).toLowerCase().includes('m3u8');
+        }
+
+        function isFavorite(camera) {
+            const identity = cameraIdentity(camera);
+            return Boolean(identity) && favorites.some((item) => cameraIdentity(item) === identity);
+        }
+
+        function createPopupContent(camera) {
+            const name = escapeHtml(camera.name);
+            const location = escapeHtml(camera.location);
+            const coordinateText = `${Number(camera.lat).toFixed(6)}, ${Number(camera.lng).toFixed(6)}`;
+            const meta = `<strong>Camera ID:</strong> ${escapeHtml(camera.id)}<br>${location}<br><strong>Coordinates:</strong> ${escapeHtml(coordinateText)}`;
+            const favoriteLabel = isFavorite(camera) ? 'Remove favorite' : 'Save favorite';
+            const favoriteClass = isFavorite(camera) ? ' saved' : '';
+            const replayUrl = replayUrlForCamera(camera);
+            const replayAction = replayUrl
+                ? `<a class="popup-replay-link" href="${replayUrl}">Replay</a>`
+                : '';
+
+            if (!camera.stream_url) {
+                return `
+                    <div class="camera-popup">
+                        <h3 class="popup-name">${name}</h3>
+                        <p class="popup-meta">${meta}</p>
+                        <div class="popup-actions">
+                            <button type="button" class="popup-favorite-btn${favoriteClass}" id="favorite-${camera.domId}">${favoriteLabel}</button>
+                            ${replayAction}
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="camera-popup">
+                    <h3 class="popup-name">${name}</h3>
+                    <p class="popup-meta">${meta}</p>
+                    <video
+                        id="video-${camera.domId}"
+                        controls
+                        autoplay
+                        muted
+                        playsinline
+                        preload="none"
+                    ></video>
+                    <div class="popup-actions">
+                        <button type="button" class="popup-favorite-btn${favoriteClass}" id="favorite-${camera.domId}">${favoriteLabel}</button>
+                        ${replayAction}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateFavoriteButton(camera) {
+            const button = document.getElementById(`favorite-${camera.domId}`);
+            if (!button) {
+                return;
+            }
+
+            const saved = isFavorite(camera);
+            button.textContent = saved ? 'Remove favorite' : 'Save favorite';
+            button.classList.toggle('saved', saved);
+        }
+
+        function updateAllFavoriteButtons() {
+            cameras.forEach((camera) => updateFavoriteButton(camera));
+        }
+
+        function prepareVideoForAutoplay(videoEl) {
+            if (!videoEl) {
+                return;
+            }
+
+            videoEl.autoplay = true;
+            videoEl.defaultMuted = true;
+            videoEl.muted = true;
+            videoEl.playsInline = true;
+            videoEl.setAttribute('autoplay', '');
+            videoEl.setAttribute('muted', '');
+            videoEl.setAttribute('playsinline', '');
+        }
+
+        function tryPlayVideo(videoEl) {
+            if (!videoEl) {
+                return;
+            }
+
+            prepareVideoForAutoplay(videoEl);
+            const playPromise = videoEl.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+                playPromise.catch(() => {});
+            }
+        }
+
+        function attachStream(videoEl, camera) {
+            if (!videoEl || !camera || !camera.stream_url) {
+                return;
+            }
+
+            prepareVideoForAutoplay(videoEl);
+
+            if (videoEl.canPlayType('application/vnd.apple.mpegurl') || !looksLikeHls(camera.stream_url)) {
+                videoEl.src = camera.stream_url;
+                videoEl.addEventListener('loadedmetadata', () => tryPlayVideo(videoEl), { once: true });
+                videoEl.addEventListener('canplay', () => tryPlayVideo(videoEl), { once: true });
+                videoEl.load();
+                tryPlayVideo(videoEl);
+                return;
+            }
+
+            if (window.Hls && Hls.isSupported()) {
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    autoStartLoad: true
+                });
+
+                hls.loadSource(camera.stream_url);
+                hls.attachMedia(videoEl);
+                videoEl._hlsInstance = hls;
+
+                videoEl.addEventListener('loadedmetadata', () => tryPlayVideo(videoEl), { once: true });
+                videoEl.addEventListener('canplay', () => tryPlayVideo(videoEl), { once: true });
+
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    tryPlayVideo(videoEl);
+                });
+
+                hls.on(Hls.Events.ERROR, (_event, data) => {
+                    if (data.fatal) {
+                        hls.destroy();
+                        videoEl._hlsInstance = null;
+                    }
+                });
+
+                return;
+            }
+        }
+
+        function cleanupVideo(videoEl) {
+            if (!videoEl) {
+                return;
+            }
+
+            try {
+                videoEl.pause();
+            } catch (_error) {}
+
+            if (videoEl._hlsInstance) {
+                videoEl._hlsInstance.destroy();
+                videoEl._hlsInstance = null;
+            }
+
+            videoEl.removeAttribute('src');
+            videoEl.load();
+        }
+
+        async function postJson(url, payload = {}) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (_error) {
+                data = {};
+            }
+
+            if (response.status === 401 || response.status === 403) {
+                window.location.href = '/login';
+                throw new Error('Authentication required.');
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Request failed.');
+            }
+
+            return data;
+        }
+
+        function findMatchingCamera(target) {
+            const normalized = normalizeCamera(target || {}, 0, 'match');
+            const identity = cameraIdentity(normalized);
+
+            return cameras.find((camera) => {
+                if (identity && cameraIdentity(camera) === identity) {
+                    return true;
+                }
+
+                if (normalized.stream_url && camera.stream_url === normalized.stream_url) {
+                    return true;
+                }
+
+                return Boolean(normalized.id) && camera.id === normalized.id;
+            }) || null;
+        }
+
+        function canFocusRecord(record) {
+            return Boolean(findMatchingCamera(record));
+        }
+
+        function renderFavorites() {
+            favoritesListEl.innerHTML = '';
+
+            if (!favorites.length) {
+                favoritesListEl.innerHTML = '<p class="empty-state">No favorite cameras saved yet.</p>';
+                return;
+            }
+
+            favorites.forEach((camera) => {
+                const item = document.createElement('div');
+                item.className = 'saved-item';
+
+                const info = document.createElement('div');
+                info.className = 'saved-item-info';
+
+                const title = document.createElement('div');
+                title.className = 'saved-item-title';
+                title.textContent = camera.name;
+
+                const meta = document.createElement('div');
+                meta.className = 'saved-item-meta';
+                meta.textContent = `Camera #${camera.id || '—'} • ${camera.location}`;
+
+                info.appendChild(title);
+                info.appendChild(meta);
+
+                const actions = document.createElement('div');
+                actions.className = 'saved-item-actions';
+
+                const openButton = document.createElement('button');
+                openButton.type = 'button';
+                openButton.className = 'ghost-btn';
+                openButton.textContent = 'Open';
+                openButton.disabled = !canFocusRecord(camera);
+                openButton.addEventListener('click', () => focusCamera(camera));
+
+                const replayButton = document.createElement('button');
+                replayButton.type = 'button';
+                replayButton.className = 'ghost-btn';
+                replayButton.textContent = 'Replay';
+                replayButton.disabled = !replayUrlForCamera(camera);
+                replayButton.addEventListener('click', () => openReplay(camera));
+
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'danger-btn';
+                removeButton.textContent = 'Remove';
+                removeButton.addEventListener('click', async () => {
+                    try {
+                        await removeFavorite(camera);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                });
+
+                actions.appendChild(openButton);
+                actions.appendChild(replayButton);
+                actions.appendChild(removeButton);
+                item.appendChild(info);
+                item.appendChild(actions);
+                favoritesListEl.appendChild(item);
+            });
+        }
+
+        function renderHistory() {
+            historyListEl.innerHTML = '';
+            clearHistoryBtn.disabled = !historyEntries.length;
+
+            if (!historyEntries.length) {
+                historyListEl.innerHTML = '<p class="empty-state">Your browsing history is empty.</p>';
+                return;
+            }
+
+            historyEntries.forEach((entry) => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+
+                const info = document.createElement('div');
+                info.className = 'history-item-info';
+
+                const top = document.createElement('div');
+                top.className = 'history-item-top';
+                top.textContent = entry.camera_id ? `Camera #${entry.camera_id}` : (entry.name || 'Camera');
+
+                const location = document.createElement('div');
+                location.className = 'history-item-location';
+                location.textContent = entry.location || 'Location unavailable';
+
+                const time = document.createElement('div');
+                time.className = 'history-item-time';
+                time.textContent = entry.timestamp || 'Timestamp unavailable';
+
+                info.appendChild(top);
+                info.appendChild(location);
+                info.appendChild(time);
+
+                const actions = document.createElement('div');
+                actions.className = 'history-item-actions';
+
+                const openButton = document.createElement('button');
+                openButton.type = 'button';
+                openButton.className = 'ghost-btn';
+                openButton.textContent = 'Open';
+                openButton.disabled = !canFocusRecord(entry);
+                openButton.addEventListener('click', () => focusCamera(entry));
+
+                const replayButton = document.createElement('button');
+                replayButton.type = 'button';
+                replayButton.className = 'ghost-btn';
+                replayButton.textContent = 'Replay';
+                replayButton.disabled = !replayUrlForCamera(entry);
+                replayButton.addEventListener('click', () => openReplay(entry));
+
+                actions.appendChild(openButton);
+                actions.appendChild(replayButton);
+                item.appendChild(info);
+                item.appendChild(actions);
+                historyListEl.appendChild(item);
+            });
+        }
+
+        async function addFavorite(camera) {
+            const data = await postJson('/api/user/favorites', cameraPayload(camera));
+            favorites = normalizeFavoriteList(data.favorites);
+            renderFavorites();
+            updateAllFavoriteButtons();
+        }
+
+        async function removeFavorite(camera) {
+            const data = await postJson('/api/user/favorites/remove', {
+                favorite_key: cameraIdentity(camera),
+                ...cameraPayload(camera)
+            });
+            favorites = normalizeFavoriteList(data.favorites);
+            renderFavorites();
+            updateAllFavoriteButtons();
+        }
+
+        async function toggleFavorite(camera) {
+            if (isFavorite(camera)) {
+                await removeFavorite(camera);
+                return;
+            }
+
+            await addFavorite(camera);
+        }
+
+        async function recordHistory(camera) {
+            const identity = cameraIdentity(camera) || camera.key;
+            const now = Date.now();
+            const lastRecordedAt = historyCooldownByIdentity.get(identity) || 0;
+            if (now - lastRecordedAt < 3000) {
+                return;
+            }
+
+            historyCooldownByIdentity.set(identity, now);
+
+            try {
+                const data = await postJson('/api/user/history', cameraPayload(camera));
+                historyEntries = normalizeHistoryList(data.history);
+                renderHistory();
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        function focusCamera(target) {
+            const camera = findMatchingCamera(target);
+            if (!camera || !Number.isFinite(camera.lat) || !Number.isFinite(camera.lng)) {
+                return;
+            }
+
+            const identity = cameraIdentity(camera) || camera.key;
+            const marker = markersByIdentity.get(identity);
+            map.flyTo([camera.lat, camera.lng], Math.max(map.getZoom(), 15));
+            if (marker) {
+                window.setTimeout(() => marker.openPopup(), 180);
+            }
+        }
+
+        function bindPopupBehavior(camera) {
+            const favoriteButton = document.getElementById(`favorite-${camera.domId}`);
+            if (favoriteButton) {
+                favoriteButton.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    favoriteButton.disabled = true;
+                    try {
+                        await toggleFavorite(camera);
+                    } catch (error) {
+                        console.error(error);
+                    } finally {
+                        favoriteButton.disabled = false;
+                        updateFavoriteButton(camera);
+                    }
+                });
+            }
+
+            const videoEl = document.getElementById(`video-${camera.domId}`);
+            attachStream(videoEl, camera);
+            recordHistory(camera);
+            updateFavoriteButton(camera);
+        }
+
+        function renderMarkers() {
+            cameras = buildCameraList();
+            markerLayer.clearLayers();
+            markersByIdentity.clear();
+
+            if (!cameras.length) {
+                map.setView(defaultCenter, defaultZoom);
+                return;
+            }
+
+            const bounds = [];
+            cameras.forEach((camera) => {
+                const marker = L.marker([camera.lat, camera.lng]).addTo(markerLayer);
+                const identity = cameraIdentity(camera) || camera.key;
+                if (identity) {
+                    markersByIdentity.set(identity, marker);
+                }
+                bounds.push([camera.lat, camera.lng]);
+
+                marker.bindPopup(createPopupContent(camera), {
+                    maxWidth: 360
+                });
+
+                marker.on('popupopen', () => {
+                    bindPopupBehavior(camera);
+                });
+
+                marker.on('popupclose', () => {
+                    const videoEl = document.getElementById(`video-${camera.domId}`);
+                    cleanupVideo(videoEl);
+                });
+            });
+
+            if (bounds.length === 1) {
+                map.setView(bounds[0], 14);
+            } else {
+                map.fitBounds(bounds, { padding: [40, 40] });
+            }
+        }
+
+        clearHistoryBtn.addEventListener('click', async () => {
+            if (!historyEntries.length) {
+                return;
+            }
+
+            clearHistoryBtn.disabled = true;
+            try {
+                const data = await postJson('/api/user/history/clear');
+                historyEntries = normalizeHistoryList(data.history);
+                renderHistory();
+            } catch (error) {
+                console.error(error);
+            } finally {
+                clearHistoryBtn.disabled = false;
+            }
+        });
+
+        window.addEventListener('storage', (event) => {
+            if (event.key && ![LOCAL_ADDED_KEY, LOCAL_DELETED_KEY].includes(event.key)) {
+                return;
+            }
+
+            renderMarkers();
+            renderFavorites();
+            renderHistory();
+        });
+
+        favorites = normalizeFavoriteList(initialFavorites);
+        historyEntries = normalizeHistoryList(initialHistory);
+        renderMarkers();
+        renderFavorites();
+        renderHistory();
+    </script>
+</body>
+</html>

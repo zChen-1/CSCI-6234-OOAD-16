@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Traffic Camera Map</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions .secondary {
+            padding: 8px 16px;
+            min-height: 40px;
+        }
+
+        .map-shell {
+            position: relative;
+        }
+
+        .map-message {
+            position: absolute;
+            left: 20px;
+            bottom: 20px;
+            z-index: 500;
+            max-width: min(440px, calc(100% - 40px));
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(17, 26, 46, 0.94);
+            color: #e5e7eb;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+            line-height: 1.45;
+        }
+
+        .camera-popup {
+            width: 330px;
+        }
+
+        .camera-popup .popup-name {
+            margin: 0 0 8px 0;
+            font-size: 18px;
+            color: #111;
+        }
+
+        .camera-popup .popup-meta {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.45;
+        }
+
+        .camera-popup .popup-stream-state {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.45;
+        }
+
+        .camera-popup video {
+            width: 100%;
+            border-radius: 8px;
+            background: black;
+        }
+
+        .popup-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .popup-actions button {
+            padding: 9px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(17, 24, 39, 0.12);
+            background: rgba(17, 24, 39, 0.08);
+            color: #111827;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .popup-actions button:hover {
+            background: rgba(17, 24, 39, 0.12);
+        }
+
+        .popup-actions button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .popup-actions.live-only {
+            grid-template-columns: 1fr;
+        }
+
+        .popup-access-note {
+            margin: 0 0 10px 0;
+            font-size: 13px;
+            color: #4b5563;
+            line-height: 1.45;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>Traffic Camera Map</h1>
+        {% if session.get('role') == 'admin' %}
+        <div class="header-actions">
+            <button type="button" class="secondary" onclick="window.location.href='/adminPage.html'">Open admin page</button>
+            <button type="button" class="login-btn" onclick="window.location.href='/logout'">
+                Logout ({{ session['user'] }})
+            </button>
+        </div>
+        {% elif session.get('role') == 'user' %}
+        <div class="header-actions">
+            <button type="button" class="secondary" onclick="window.location.href='/userPage.html'">Open user page</button>
+            <button type="button" class="login-btn" onclick="window.location.href='/logout'">
+                Logout ({{ session['user'] }})
+            </button>
+        </div>
+        {% else %}
+        <button type="button" class="login-btn" onclick="window.location.href='/login'">
+            Login
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="map-shell">
+        <div id="map"></div>
+        <div id="mapMessage" class="map-message" hidden></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script>
+        const initialCameras = {{ cameras|default([])|tojson }};
+        const canWatchReplay = {{ can_watch_replay|default(false)|tojson }};
+        const cameraApiUrl = {{ url_for('public_cameras_api')|tojson }};
+        const defaultCenter = [38.8816, -77.0910];
+        const defaultZoom = 13;
+
+        const map = L.map('map').setView(defaultCenter, defaultZoom);
+        const markerLayer = L.layerGroup().addTo(map);
+        const messageEl = document.getElementById('mapMessage');
+
+        let cameras = normalizeCameraList(initialCameras);
+        let renderSignature = '';
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        function normalizeCameraList(items) {
+            return (Array.isArray(items) ? items : []).map((camera) => ({
+                id: String((camera && camera.id) || ''),
+                recording_id: String((camera && (camera.recording_id || camera.camera_site || camera.id)) || ''),
+                camera_site: String((camera && camera.camera_site) || '').trim().toLowerCase(),
+                name: String((camera && camera.name) || 'Camera').trim() || 'Camera',
+                location: String((camera && camera.location) || 'Location unavailable').trim() || 'Location unavailable',
+                stream_url: String((camera && camera.stream_url) || '').trim(),
+                lat: Number.isFinite(Number(camera && camera.lat)) ? Number(camera.lat) : null,
+                lng: Number.isFinite(Number(camera && camera.lng)) ? Number(camera.lng) : null,
+            })).filter((camera) => Number.isFinite(camera.lat) && Number.isFinite(camera.lng));
+        }
+
+        function buildSignature(items) {
+            return JSON.stringify(items.map((camera) => [
+                camera.recording_id,
+                camera.stream_url,
+                camera.lat,
+                camera.lng,
+            ]));
+        }
+
+        function setMessage(message) {
+            if (!message) {
+                messageEl.hidden = true;
+                messageEl.textContent = '';
+                return;
+            }
+
+            messageEl.hidden = false;
+            messageEl.textContent = message;
+        }
+
+        function escapeHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function looksLikeHls(url) {
+            return /\.m3u8($|[?#])/i.test(url) || String(url).toLowerCase().includes('m3u8');
+        }
+
+        function cameraRef(camera) {
+            return encodeURIComponent(camera.recording_id || camera.camera_site || camera.id);
+        }
+
+        function createPopupContent(camera) {
+            const name = escapeHtml(camera.name);
+            const location = escapeHtml(camera.location);
+            const coordinateText = `${Number(camera.lat).toFixed(6)}, ${Number(camera.lng).toFixed(6)}`;
+            const meta = `<strong>Camera ID:</strong> ${escapeHtml(camera.id || '—')}<br>${location}<br><strong>Coordinates:</strong> ${escapeHtml(coordinateText)}`;
+            const actionsClass = canWatchReplay ? 'popup-actions' : 'popup-actions live-only';
+            const replayButtons = canWatchReplay
+                ? `
+                    <button type="button" id="live-${camera.recording_id}">Live</button>
+                    <button type="button" id="replay-${camera.recording_id}">Last 15m</button>
+                    <button type="button" id="replay-hour-${camera.recording_id}">Last 1h</button>
+                `
+                : `
+                    <button type="button" id="live-${camera.recording_id}">Live</button>
+                `;
+            const accessNote = canWatchReplay
+                ? ''
+                : '<p class="popup-access-note">Log in to watch recorded footage. Guests can only view the live stream.</p>';
+            const initialStatus = canWatchReplay
+                ? 'Loading live feed…'
+                : 'Live video only. Log in to access replay.';
+
+            return `
+                <div class="camera-popup">
+                    <h3 class="popup-name">${name}</h3>
+                    <p class="popup-meta">${meta}</p>
+                    <div class="${actionsClass}">
+                        ${replayButtons}
+                    </div>
+                    ${accessNote}
+                    <video
+                        id="video-${camera.recording_id}"
+                        controls
+                        muted
+                        playsinline
+                        preload="metadata"
+                    ></video>
+                    <p id="stream-status-${camera.recording_id}" class="popup-stream-state">${initialStatus}</p>
+                </div>
+            `;
+        }
+
+        function updatePopupStatus(recordingId, message) {
+            const statusEl = document.getElementById(`stream-status-${recordingId}`);
+            if (statusEl) {
+                statusEl.textContent = message;
+            }
+        }
+
+        function cleanupVideo(videoEl) {
+            if (!videoEl) {
+                return;
+            }
+
+            try {
+                videoEl.pause();
+            } catch (_error) {}
+
+            if (videoEl._hlsInstance) {
+                videoEl._hlsInstance.destroy();
+                videoEl._hlsInstance = null;
+            }
+
+            if (videoEl._replayEndedHandler) {
+                videoEl.removeEventListener('ended', videoEl._replayEndedHandler);
+                videoEl._replayEndedHandler = null;
+            }
+
+            if (videoEl._replayErrorHandler) {
+                videoEl.removeEventListener('error', videoEl._replayErrorHandler);
+                videoEl._replayErrorHandler = null;
+            }
+
+            videoEl.removeAttribute('src');
+            while (videoEl.firstChild) {
+                videoEl.removeChild(videoEl.firstChild);
+            }
+            videoEl.load();
+        }
+
+        function tryPlay(videoEl, recordingId, successMessage) {
+            if (!videoEl) {
+                return;
+            }
+
+            const playPromise = videoEl.play();
+            if (playPromise && typeof playPromise.then === 'function') {
+                playPromise
+                    .then(() => updatePopupStatus(recordingId, successMessage))
+                    .catch(() => updatePopupStatus(recordingId, 'Video loaded. Press play if autoplay is blocked.'));
+            }
+        }
+
+        function formatDurationSeconds(seconds) {
+            const totalSeconds = Math.max(0, Math.round(Number(seconds) || 0));
+            if (!totalSeconds) {
+                return '0 seconds';
+            }
+
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            const parts = [];
+
+            if (hours) {
+                parts.push(`${hours} hour${hours === 1 ? '' : 's'}`);
+            }
+            if (minutes) {
+                parts.push(`${minutes} minute${minutes === 1 ? '' : 's'}`);
+            }
+            if (!hours && !minutes && secs) {
+                parts.push(`${secs} second${secs === 1 ? '' : 's'}`);
+            }
+
+            return parts.join(' ');
+        }
+
+        function attachLiveStream(videoEl, camera) {
+            if (!videoEl || !camera || !camera.stream_url) {
+                return;
+            }
+
+            cleanupVideo(videoEl);
+            updatePopupStatus(camera.recording_id, 'Loading live feed…');
+
+            if (videoEl.canPlayType('application/vnd.apple.mpegurl') || !looksLikeHls(camera.stream_url)) {
+                videoEl.src = camera.stream_url;
+                videoEl.addEventListener('loadedmetadata', () => {
+                    tryPlay(videoEl, camera.recording_id, 'Live feed is playing.');
+                }, { once: true });
+                videoEl.addEventListener('error', () => {
+                    updatePopupStatus(camera.recording_id, 'This live feed could not be played.');
+                }, { once: true });
+                return;
+            }
+
+            if (window.Hls && Hls.isSupported()) {
+                const hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true
+                });
+
+                hls.loadSource(camera.stream_url);
+                hls.attachMedia(videoEl);
+                videoEl._hlsInstance = hls;
+
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    tryPlay(videoEl, camera.recording_id, 'Live feed is playing.');
+                });
+
+                hls.on(Hls.Events.ERROR, (_event, data) => {
+                    if (data.fatal) {
+                        updatePopupStatus(camera.recording_id, 'This live feed could not be played.');
+                        hls.destroy();
+                        videoEl._hlsInstance = null;
+                    }
+                });
+
+                return;
+            }
+
+            updatePopupStatus(camera.recording_id, 'This browser does not support HLS playback.');
+        }
+
+        function loadReplayVideo(videoEl, camera, replayVideo) {
+            cleanupVideo(videoEl);
+            videoEl.src = replayVideo.url;
+            videoEl.load();
+
+            const handleEnded = () => {
+                updatePopupStatus(camera.recording_id, 'Replay finished.');
+            };
+
+            const handleError = () => {
+                updatePopupStatus(camera.recording_id, 'The replay video could not be played.');
+            };
+
+            videoEl._replayEndedHandler = handleEnded;
+            videoEl._replayErrorHandler = handleError;
+            videoEl.addEventListener('ended', handleEnded);
+            videoEl.addEventListener('error', handleError);
+
+            const sourceText = replayVideo.clip_count > 0
+                ? ` built from ${replayVideo.clip_count} clip${replayVideo.clip_count === 1 ? '' : 's'}`
+                : '';
+            tryPlay(
+                videoEl,
+                camera.recording_id,
+                `${formatDurationSeconds(replayVideo.duration_seconds)} replay is playing${sourceText}.`
+            );
+        }
+
+        function clampRange(status, minutes) {
+            const latest = status.latest_available ? new Date(status.latest_available) : new Date();
+            const earliest = status.earliest_available ? new Date(status.earliest_available) : null;
+            let start = new Date(latest.getTime() - (Number(minutes) * 60000));
+
+            if (earliest && !Number.isNaN(earliest.getTime()) && start < earliest) {
+                start = earliest;
+            }
+
+            return {
+                start: start.toISOString(),
+                end: latest.toISOString(),
+            };
+        }
+
+        async function loadReplay(videoEl, camera, minutes) {
+            if (!canWatchReplay) {
+                updatePopupStatus(camera.recording_id, 'Log in to watch recorded footage. Live video is still available.');
+                return;
+            }
+
+            updatePopupStatus(camera.recording_id, 'Building replay video…');
+
+            try {
+                const statusResponse = await fetch(`/api/replay/status/${cameraRef(camera)}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+
+                const statusPayload = await statusResponse.json();
+                const status = statusPayload.status || {};
+
+                if (statusResponse.status === 401 || statusResponse.status === 403) {
+                    updatePopupStatus(camera.recording_id, statusPayload.error || 'Log in to watch recorded footage.');
+                    return;
+                }
+
+                if (!statusResponse.ok || !status.has_archive) {
+                    updatePopupStatus(camera.recording_id, statusPayload.error || 'No recorded footage is available yet.');
+                    return;
+                }
+
+                const range = clampRange(status, minutes);
+                const params = new URLSearchParams({
+                    start: range.start,
+                    end: range.end,
+                });
+
+                const replayResponse = await fetch(`/api/replay/video/${cameraRef(camera)}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+
+                const replayPayload = await replayResponse.json();
+                const replayVideo = replayPayload.video || null;
+
+                if (replayResponse.status === 401 || replayResponse.status === 403) {
+                    updatePopupStatus(camera.recording_id, replayPayload.error || 'Log in to watch recorded footage.');
+                    return;
+                }
+
+                if (!replayResponse.ok || !replayVideo || !replayVideo.url) {
+                    updatePopupStatus(
+                        camera.recording_id,
+                        replayPayload.error || 'No recorded footage matched that range.'
+                    );
+                    return;
+                }
+
+                loadReplayVideo(videoEl, camera, replayVideo);
+            } catch (error) {
+                updatePopupStatus(camera.recording_id, error.message || 'Recorded footage could not be loaded.');
+            }
+        }
+
+        function bindPopupBehavior(camera) {
+            const videoEl = document.getElementById(`video-${camera.recording_id}`);
+            const liveButton = document.getElementById(`live-${camera.recording_id}`);
+            const replayButton = document.getElementById(`replay-${camera.recording_id}`);
+            const replayHourButton = document.getElementById(`replay-hour-${camera.recording_id}`);
+
+            if (liveButton) {
+                liveButton.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    attachLiveStream(videoEl, camera);
+                });
+            }
+
+            if (canWatchReplay && replayButton) {
+                replayButton.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    await loadReplay(videoEl, camera, 15);
+                });
+            }
+
+            if (canWatchReplay && replayHourButton) {
+                replayHourButton.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    await loadReplay(videoEl, camera, 60);
+                });
+            }
+
+            attachLiveStream(videoEl, camera);
+        }
+
+        function renderMarkers() {
+            markerLayer.clearLayers();
+
+            if (!cameras.length) {
+                setMessage('No cameras have been added yet. An administrator can add one from the admin page, and it will appear here automatically.');
+                map.setView(defaultCenter, defaultZoom);
+                renderSignature = buildSignature(cameras);
+                return;
+            }
+
+            setMessage('');
+
+            const bounds = [];
+            cameras.forEach((camera) => {
+                const marker = L.marker([camera.lat, camera.lng]).addTo(markerLayer);
+                bounds.push([camera.lat, camera.lng]);
+
+                marker.bindPopup(createPopupContent(camera), {
+                    maxWidth: 370
+                });
+
+                marker.on('popupopen', () => {
+                    bindPopupBehavior(camera);
+                });
+
+                marker.on('popupclose', () => {
+                    const videoEl = document.getElementById(`video-${camera.recording_id}`);
+                    cleanupVideo(videoEl);
+                });
+            });
+
+            if (bounds.length === 1) {
+                map.setView(bounds[0], 14);
+            } else {
+                map.fitBounds(bounds, { padding: [40, 40] });
+            }
+
+            renderSignature = buildSignature(cameras);
+        }
+
+        async function refreshCameras() {
+            try {
+                const response = await fetch(cameraApiUrl, {
+                    headers: { 'Accept': 'application/json' },
+                    credentials: 'same-origin',
+                });
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                const nextCameras = normalizeCameraList(payload.cameras || []);
+                const nextSignature = buildSignature(nextCameras);
+
+                if (nextSignature !== renderSignature) {
+                    cameras = nextCameras;
+                    renderMarkers();
+                }
+            } catch (_error) {
+                // Ignore background refresh errors.
+            }
+        }
+
+        renderMarkers();
+        window.setInterval(refreshCameras, 15000);
+    </script>
+</body>
+</html>

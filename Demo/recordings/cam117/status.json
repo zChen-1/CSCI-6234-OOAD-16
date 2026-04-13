@@ -1,0 +1,15 @@
+{
+  "recording_id": "cam117",
+  "camera_site": "cam117",
+  "camera_id": "117",
+  "camera_name": "Camera 117",
+  "stream_url": "https://itsvideo.arlingtonva.us:8012/live/cam117.stream/playlist.m3u8",
+  "state": "stopped",
+  "pid": null,
+  "segment_seconds": 60,
+  "window_hours": 72,
+  "updated_at": "2026-04-13T00:57:26.351480Z",
+  "last_exit_code": 255,
+  "last_error": "",
+  "current_clip_path": ""
+}

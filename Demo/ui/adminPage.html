@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Camera Viewer — Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        :root {
+            --admin-panel-gap: 18px;
+            --admin-list-height: clamp(280px, 42vh, 520px);
+        }
+
+        .hero h1 {
+            margin-bottom: 8px;
+        }
+
+        .input-row input {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px 16px;
+            font-size: 1rem;
+            min-width: 0;
+        }
+
+        .form-hint {
+            margin: 12px 0 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        #managementMessage {
+            margin-top: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header-actions .secondary {
+            padding: 8px 16px;
+            min-height: 40px;
+        }
+
+        .player-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .current-camera-block {
+            min-width: 0;
+        }
+
+        .current-camera-subtitle {
+            margin: 6px 0 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        #playerStatus {
+            margin-top: 14px;
+        }
+
+        .sidebar-card {
+            position: sticky;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: var(--admin-panel-gap);
+        }
+
+        .sidebar-panel {
+            min-width: 0;
+        }
+
+        .sidebar-panel h2 {
+            margin: 0 0 12px;
+        }
+
+        .camera-list-shell {
+            height: var(--admin-list-height);
+            min-height: 260px;
+            overflow: hidden;
+            border-radius: 18px;
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            background: rgba(15, 23, 42, 0.36);
+            padding: 14px;
+        }
+
+        .camera-list {
+            display: grid;
+            gap: 12px;
+            height: 100%;
+            overflow-y: auto;
+            overflow-x: hidden;
+            overscroll-behavior: contain;
+            padding-right: 4px;
+        }
+
+        .camera-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: 0.2s ease;
+        }
+
+        .camera-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .camera-item.active {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.28);
+        }
+
+        .camera-item.disabled {
+            opacity: 0.78;
+        }
+
+        .camera-details {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .camera-chip {
+            flex-shrink: 0;
+        }
+
+        .camera-actions {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .camera-action {
+            padding: 10px 14px;
+            font-size: 0.88rem;
+            border-radius: 12px;
+        }
+
+        .camera-action.danger {
+            background: rgba(248, 113, 113, 0.12);
+            color: #fecaca;
+            border: 1px solid rgba(248, 113, 113, 0.28);
+        }
+
+        .camera-action:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .camera-info-card {
+            border-radius: 18px;
+            border: 1px solid rgba(56, 189, 248, 0.18);
+            background: rgba(15, 23, 42, 0.36);
+            padding: 16px;
+        }
+
+        .info-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: grid;
+            grid-template-columns: 112px minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+
+        .info-label {
+            color: var(--muted);
+            font-size: 0.92rem;
+            font-weight: 700;
+        }
+
+        .info-value {
+            min-width: 0;
+            color: var(--text);
+            line-height: 1.45;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .info-value.url-value {
+            font-size: 0.88rem;
+        }
+
+        @media (max-width: 1080px) {
+            .player-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar-card {
+                position: static;
+            }
+
+            .camera-list-shell {
+                height: min(420px, 45vh);
+            }
+        }
+
+        @media (max-width: 920px) {
+            .camera-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .camera-actions {
+                width: 100%;
+            }
+
+            .camera-action {
+                flex: 1;
+            }
+
+            .info-item {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1>Traffic Camera Viewer</h1>
+        {% if session.get('user') %}
+        <div class="header-actions">
+            {% if session.get('user')|lower == 'admin' %}
+            <button type="button" class="secondary" onclick="window.location.href='/'">Open map page</button>
+            {% endif %}
+            <button type="button" class="login-btn" onclick="window.location.href='/logout'">
+                Logout ({{ session['user'] }})
+            </button>
+        </div>
+        {% else %}
+        <button type="button" class="login-btn" onclick="window.location.href='/login'">
+            Login
+        </button>
+        {% endif %}
+    </div>
+
+    <main class="page">
+        <section class="hero card">
+            <div>
+                <h1>Admin Page</h1>
+                <p class="lead">Add a camera URL here.</p>
+            </div>
+
+            <form id="cameraForm" action="" method="post" class="video-form" novalidate>
+                <label for="video_url">Add a camera</label>
+
+                <div class="input-row">
+                    <input
+                        id="video_url"
+                        name="video_url"
+                        type="url"
+                        inputmode="url"
+                        placeholder="https://example.com/stream.m3u8"
+                        value="{{ stream_url|default('', true) }}"
+                        required
+                    >
+                    <button type="submit">Add camera</button>
+                </div>
+                <p class="form-hint">If the URL matches an entry in Traffic+Cameras.json, the app will automatically use the camera name, location, and map coordinates.</p>
+                <p id="managementMessage" class="message muted" hidden></p>
+            </form>
+        </section>
+
+        <section class="player-layout">
+            <div class="card player-card">
+                <div class="player-header">
+                    <div class="current-camera-block">
+                        <h2 id="currentCameraTitle">Preview</h2>
+                        <p id="currentCameraSubtitle" class="current-camera-subtitle">Select a managed camera to preview the live feed.</p>
+                    </div>
+                    <span id="playerTypeBadge" class="badge">Idle</span>
+                </div>
+
+                <div class="video-shell">
+                    <video
+                        id="videoPlayer"
+                        controls
+                        muted
+                        playsinline
+                        preload="metadata"
+                        crossorigin="anonymous"
+                    ></video>
+                </div>
+
+                <p id="playerStatus" class="status">Waiting for a managed camera…</p>
+            </div>
+
+            <aside class="card sidebar-card">
+                <section class="sidebar-panel">
+                    <h2>Managed cameras</h2>
+                    <div class="camera-list-shell">
+                        <div id="cameraList" class="camera-list"></div>
+                    </div>
+                </section>
+
+                <section class="sidebar-panel">
+                    <h2>Information</h2>
+                    <div class="camera-info-card">
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="info-label">Camera</span>
+                                <span id="info-name" class="info-value">—</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Camera ID</span>
+                                <span id="info-id" class="info-value">—</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Archive key</span>
+                                <span id="info-recording-id" class="info-value">—</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Location</span>
+                                <span id="info-location" class="info-value">—</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Coordinates</span>
+                                <span id="info-coordinates" class="info-value">—</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Stream URL</span>
+                                <span id="info-stream" class="info-value url-value">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </aside>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script>
+        const requestedStreamUrl = {{ stream_url|default('', true)|tojson }};
+        const initialCameras = {{ cameras|default([])|tojson }};
+        const addCameraEndpoint = {{ url_for('admin_add_camera_api')|tojson }};
+        const removeCameraEndpoint = {{ url_for('admin_remove_camera_api')|tojson }};
+
+        const cameraForm = document.getElementById('cameraForm');
+        const urlInput = document.getElementById('video_url');
+        const managementMessageEl = document.getElementById('managementMessage');
+        const player = document.getElementById('videoPlayer');
+        const badgeEl = document.getElementById('playerTypeBadge');
+        const statusEl = document.getElementById('playerStatus');
+        const cameraListEl = document.getElementById('cameraList');
+        const playerTitleEl = document.getElementById('currentCameraTitle');
+        const playerSubtitleEl = document.getElementById('currentCameraSubtitle');
+        const infoNameEl = document.getElementById('info-name');
+        const infoIdEl = document.getElementById('info-id');
+        const infoRecordingIdEl = document.getElementById('info-recording-id');
+        const infoLocationEl = document.getElementById('info-location');
+        const infoCoordinatesEl = document.getElementById('info-coordinates');
+        const infoStreamEl = document.getElementById('info-stream');
+
+        let hlsInstance = null;
+        let activeCamera = null;
+        let shouldAutoplay = false;
+        let cameras = normalizeCameraList(initialCameras);
+
+        function normalizeCameraList(items) {
+            return (Array.isArray(items) ? items : []).map((camera) => ({
+                id: String((camera && camera.id) || ''),
+                recording_id: String((camera && (camera.recording_id || camera.camera_site || camera.id)) || ''),
+                camera_site: String((camera && camera.camera_site) || '').trim().toLowerCase(),
+                name: String((camera && camera.name) || 'Camera').trim() || 'Camera',
+                location: String((camera && camera.location) || 'Location unavailable').trim() || 'Location unavailable',
+                lat: Number.isFinite(Number(camera && camera.lat)) ? Number(camera.lat) : null,
+                lng: Number.isFinite(Number(camera && camera.lng)) ? Number(camera.lng) : null,
+                stream_url: String((camera && camera.stream_url) || '').trim(),
+                status: String((camera && camera.status) || '').trim(),
+            })).sort(compareCameras);
+        }
+
+        function compareCameras(a, b) {
+            const aNum = Number(a.id);
+            const bNum = Number(b.id);
+
+            if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) {
+                return aNum - bNum;
+            }
+
+            return a.name.localeCompare(b.name, undefined, {
+                numeric: true,
+                sensitivity: 'base'
+            });
+        }
+
+        function setCameraList(nextCameras) {
+            cameras = normalizeCameraList(nextCameras);
+            const preservedSelection = activeCamera
+                ? cameras.find((camera) => camera.recording_id === activeCamera.recording_id || camera.stream_url === activeCamera.stream_url)
+                : null;
+
+            renderCameraList();
+
+            if (preservedSelection) {
+                selectCamera(preservedSelection, { attemptAutoplay: false });
+                return;
+            }
+
+            if (cameras.length) {
+                selectCamera(cameras[0], { attemptAutoplay: false });
+            } else {
+                selectCamera(null);
+            }
+        }
+
+        function showManagementMessage(message, type = 'muted') {
+            managementMessageEl.hidden = false;
+            managementMessageEl.textContent = message;
+            managementMessageEl.className = `message ${type}`;
+        }
+
+        function clearManagementMessage() {
+            managementMessageEl.hidden = true;
+            managementMessageEl.textContent = '';
+            managementMessageEl.className = 'message muted';
+        }
+
+        function setStatus(message, type = 'normal') {
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        function setBadge(text) {
+            badgeEl.textContent = text;
+        }
+
+        function isValidHttpUrl(value) {
+            try {
+                const parsed = new URL(value);
+                return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+            } catch (_error) {
+                return false;
+            }
+        }
+
+        function looksLikeHls(url) {
+            return /\.m3u8($|[?#])/i.test(url) || url.toLowerCase().includes('m3u8');
+        }
+
+        function getDirectType(url) {
+            const lower = url.toLowerCase();
+            if (lower.includes('.mp4')) return 'video/mp4';
+            if (lower.includes('.webm')) return 'video/webm';
+            if (lower.includes('.ogg') || lower.includes('.ogv')) return 'video/ogg';
+            if (lower.includes('.mov')) return 'video/quicktime';
+            return '';
+        }
+
+        function formatCoordinates(camera) {
+            if (!camera || !Number.isFinite(camera.lat) || !Number.isFinite(camera.lng)) {
+                return 'Not set';
+            }
+
+            return `${camera.lat.toFixed(6)}, ${camera.lng.toFixed(6)}`;
+        }
+
+        function clearCurrentSource() {
+            if (hlsInstance) {
+                hlsInstance.destroy();
+                hlsInstance = null;
+            }
+
+            try {
+                player.pause();
+            } catch (_error) {}
+
+            player.removeAttribute('src');
+            while (player.firstChild) {
+                player.removeChild(player.firstChild);
+            }
+            player.load();
+        }
+
+        function updateCameraDetails(camera) {
+            playerTitleEl.textContent = 'Preview';
+            playerSubtitleEl.textContent = 'The selected live feed is shown below.';
+            infoNameEl.textContent = camera.name || '—';
+            infoIdEl.textContent = camera.id || '—';
+            infoRecordingIdEl.textContent = camera.recording_id || '—';
+            infoLocationEl.textContent = camera.location || '—';
+            infoCoordinatesEl.textContent = formatCoordinates(camera);
+            infoStreamEl.textContent = camera.stream_url || 'Unavailable';
+        }
+
+        function resetCameraDetails() {
+            playerTitleEl.textContent = 'Preview';
+            playerSubtitleEl.textContent = 'Select a managed camera to preview the live feed.';
+            infoNameEl.textContent = '—';
+            infoIdEl.textContent = '—';
+            infoRecordingIdEl.textContent = '—';
+            infoLocationEl.textContent = '—';
+            infoCoordinatesEl.textContent = '—';
+            infoStreamEl.textContent = '—';
+        }
+
+        function tryAutoplay() {
+            if (!shouldAutoplay || !activeCamera) {
+                return;
+            }
+
+            shouldAutoplay = false;
+
+            const playPromise = player.play();
+            if (playPromise && typeof playPromise.then === 'function') {
+                playPromise
+                    .then(() => {
+                        setStatus('Live feed is playing.', 'success');
+                    })
+                    .catch(() => {
+                        setStatus('Feed loaded. Press play if autoplay is blocked.', 'normal');
+                    });
+            }
+        }
+
+        function attachDirectSource(url) {
+            const source = document.createElement('source');
+            const mime = getDirectType(url);
+            source.src = url;
+            if (mime) {
+                source.type = mime;
+            }
+
+            player.appendChild(source);
+            player.load();
+            setBadge(mime ? mime.replace('video/', '').toUpperCase() : 'Direct');
+            setTimeout(tryAutoplay, 0);
+        }
+
+        function attachHlsSource(url) {
+            if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                player.src = url;
+                player.load();
+                setBadge('HLS');
+                setTimeout(tryAutoplay, 0);
+                return;
+            }
+
+            if (window.Hls && Hls.isSupported()) {
+                hlsInstance = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true
+                });
+
+                hlsInstance.loadSource(url);
+                hlsInstance.attachMedia(player);
+                setBadge('HLS.js');
+
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    setStatus('Live stream loaded.', 'success');
+                    tryAutoplay();
+                });
+
+                hlsInstance.on(Hls.Events.ERROR, (_event, data) => {
+                    if (data.fatal) {
+                        setBadge('Error');
+                        setStatus('The selected camera feed could not be loaded.', 'error');
+                        hlsInstance.destroy();
+                        hlsInstance = null;
+                    }
+                });
+
+                return;
+            }
+
+            setBadge('Unsupported');
+            setStatus('This browser does not support HLS playback.', 'error');
+        }
+
+        function selectCamera(camera, { attemptAutoplay = false } = {}) {
+            activeCamera = camera || null;
+            renderCameraList();
+
+            if (!camera) {
+                clearCurrentSource();
+                resetCameraDetails();
+                setBadge('Idle');
+                setStatus('No cameras are currently managed.', 'normal');
+                return;
+            }
+
+            updateCameraDetails(camera);
+
+            if (!camera.stream_url) {
+                clearCurrentSource();
+                setBadge('Unavailable');
+                setStatus('This camera does not have a playable stream URL.', 'error');
+                return;
+            }
+
+            clearCurrentSource();
+            shouldAutoplay = attemptAutoplay;
+            setStatus('Loading selected camera…', 'normal');
+
+            if (looksLikeHls(camera.stream_url)) {
+                attachHlsSource(camera.stream_url);
+            } else {
+                attachDirectSource(camera.stream_url);
+            }
+        }
+
+        function displayLabel(camera) {
+            if (camera.id) {
+                return `Camera #${camera.id}`;
+            }
+            return camera.recording_id || camera.name || 'Camera';
+        }
+
+        function renderCameraList() {
+            cameraListEl.innerHTML = '';
+
+            if (!cameras.length) {
+                cameraListEl.innerHTML = '<p class="empty-state">No managed cameras yet. Add one above to start recording.</p>';
+                return;
+            }
+
+            cameras.forEach((camera) => {
+                const item = document.createElement('div');
+                const isActive = activeCamera && activeCamera.recording_id === camera.recording_id;
+                item.className = `camera-item${isActive ? ' active' : ''}${camera.stream_url ? '' : ' disabled'}`;
+                item.setAttribute('role', 'button');
+                item.setAttribute('aria-label', camera.name || displayLabel(camera));
+                item.tabIndex = 0;
+
+                const details = document.createElement('div');
+                details.className = 'camera-details';
+
+                const idChip = document.createElement('span');
+                idChip.className = 'badge camera-chip';
+                idChip.textContent = displayLabel(camera);
+                details.appendChild(idChip);
+
+                const actions = document.createElement('div');
+                actions.className = 'camera-actions';
+
+                const playButton = document.createElement('button');
+                playButton.type = 'button';
+                playButton.className = 'secondary camera-action';
+                playButton.textContent = camera.stream_url ? 'Preview' : 'Unavailable';
+                playButton.disabled = !camera.stream_url;
+                playButton.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    selectCamera(camera, { attemptAutoplay: true });
+                });
+
+                const deleteButton = document.createElement('button');
+                deleteButton.type = 'button';
+                deleteButton.className = 'camera-action danger';
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', async (event) => {
+                    event.stopPropagation();
+                    await removeCamera(camera);
+                });
+
+                item.addEventListener('click', () => {
+                    if (camera.stream_url) {
+                        selectCamera(camera, { attemptAutoplay: true });
+                    }
+                });
+
+                item.addEventListener('keydown', (event) => {
+                    if ((event.key === 'Enter' || event.key === ' ') && camera.stream_url) {
+                        event.preventDefault();
+                        selectCamera(camera, { attemptAutoplay: true });
+                    }
+                });
+
+                actions.appendChild(playButton);
+                actions.appendChild(deleteButton);
+                item.appendChild(details);
+                item.appendChild(actions);
+                cameraListEl.appendChild(item);
+            });
+        }
+
+        async function fetchJson(url, options = {}) {
+            const response = await fetch(url, {
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    ...(options.headers || {}),
+                },
+                ...options,
+            });
+
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (_error) {
+                data = {};
+            }
+
+            if (response.status === 401) {
+                window.location.href = '/login';
+                throw new Error('Authentication required.');
+            }
+
+            if (response.status === 403) {
+                throw new Error(data.error || 'You do not have access to this action.');
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || data.message || 'Request failed.');
+            }
+
+            return data;
+        }
+
+        async function addCamera(url) {
+            const trimmedUrl = String(url || '').trim();
+
+            if (!isValidHttpUrl(trimmedUrl)) {
+                showManagementMessage('Enter a valid HTTP or HTTPS camera URL.', 'error');
+                return;
+            }
+
+            const data = await fetchJson(addCameraEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ video_url: trimmedUrl }),
+            });
+
+            setCameraList(data.cameras || []);
+            const selected = cameras.find((camera) => camera.recording_id === String((data.camera && data.camera.recording_id) || '')) || cameras[0] || null;
+            selectCamera(selected, { attemptAutoplay: Boolean(selected) });
+            cameraForm.reset();
+            showManagementMessage(data.message || 'Camera saved.', data.added ? 'success' : 'muted');
+        }
+
+        async function removeCamera(camera) {
+            const confirmed = window.confirm(`Delete ${camera.name}?`);
+            if (!confirmed) {
+                return;
+            }
+
+            const data = await fetchJson(removeCameraEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    recording_id: camera.recording_id,
+                    stream_url: camera.stream_url,
+                }),
+            });
+
+            setCameraList(data.cameras || []);
+            showManagementMessage(data.message || `${camera.name} removed.`, 'muted');
+        }
+
+        cameraForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            clearManagementMessage();
+
+            try {
+                await addCamera(urlInput ? urlInput.value : '');
+            } catch (error) {
+                showManagementMessage(error.message || 'Could not add the camera.', 'error');
+            }
+        });
+
+        player.addEventListener('loadedmetadata', tryAutoplay);
+        player.addEventListener('canplay', tryAutoplay);
+        player.addEventListener('playing', () => {
+            if (activeCamera) {
+                setStatus('Live feed is playing.', 'success');
+            }
+        });
+        player.addEventListener('error', () => {
+            if (activeCamera) {
+                setStatus('The browser could not play the selected camera feed.', 'error');
+            }
+        });
+
+        renderCameraList();
+
+        if (cameras.length) {
+            const initialCamera = cameras.find((camera) => camera.stream_url === requestedStreamUrl) || cameras[0];
+            selectCamera(initialCamera, { attemptAutoplay: true });
+        } else {
+            selectCamera(null);
+        }
+    </script>
+</body>
+</html>
