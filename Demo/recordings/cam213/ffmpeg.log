@@ -1,0 +1,27 @@
+[2026-04-12T20:55:52.979264] Recorder thread started
+[2026-04-12T20:55:52.989145] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam213/clips/2026/04/13/cam213_20260413T005552Z.mp4
+[https @ 0x7f8252708540] HTTP error 404 Not Found
+[in#0 @ 0x7f8252708000] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam213.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:53.404947] ffmpeg exited with code 8
+[2026-04-12T20:55:55.416648] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam213/clips/2026/04/13/cam213_20260413T005555Z.mp4
+[https @ 0x7fa2a0004c80] HTTP error 404 Not Found
+[in#0 @ 0x7fa2a00046c0] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam213.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:55.897115] ffmpeg exited with code 8
+[2026-04-12T20:55:57.908574] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam213/clips/2026/04/13/cam213_20260413T005557Z.mp4
+[https @ 0x7f7b5c804c80] HTTP error 404 Not Found
+[in#0 @ 0x7f7b5c8046c0] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam213.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:58.414587] ffmpeg exited with code 8
+[2026-04-12T20:56:00.425081] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam213/clips/2026/04/13/cam213_20260413T005600Z.mp4
+[https @ 0x7ff553f08240] HTTP error 404 Not Found
+[in#0 @ 0x7ff553f07c40] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam213.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:56:00.909664] ffmpeg exited with code 8
+[2026-04-12T20:56:02.918890] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam213/clips/2026/04/13/cam213_20260413T005602Z.mp4
+[2026-04-12T20:56:02.982831] Recorder thread stopped

@@ -1,0 +1,88 @@
+@startuml
+left to right direction
+
+actor "User (Primary)" as User
+actor "Developer/Admin (Secondary)" as Admin
+
+rectangle "SCOPE: Traffic Camera Browser" {
+
+  usecase "Register Account" as UC_Register
+  usecase "Watch Live Traffic Camera" as UC_Live
+  usecase "Watch Past Playback\n(last 72 hours)" as UC_Playback
+  usecase "Add Camera to Favorites" as UC_Favorite
+  usecase "View Browsing History" as UC_History
+  usecase "Manage Cameras\n(Add / Remove)" as UC_Manage
+}
+
+User --> UC_Register
+User --> UC_Live
+User --> UC_Playback
+User --> UC_Favorite
+User --> UC_History
+
+Admin --> UC_Manage
+
+note top of User
+  Users can watch videos captured by traffic cameras. 
+  Additionally, users with a personal account can view 
+  their browsing history. They can also add their favorite
+  cameras to their favorites list, allowing them to easily 
+  find and watch the cameras they are interested in on the 
+  platform.
+end note
+
+note top of Admin
+  Administrators can gain access to the management platform 
+  by logging in with an administrator account. Administrators 
+  can manage the platform, such as adding and removing cameras 
+  displayed on the platform.
+end note
+
+note right of UC_Register
+  Users can find a registration/login
+  button in the corner of the page.
+  Users can register an account to 
+  save cameras to their favorites 
+  and view their browsing history.
+end note
+
+note right of UC_Live
+  The platform displays a map 
+  showing the location of each
+  camera. Users can watch videos
+  by clicking on the corresponding
+  camera.
+end note
+
+note right of UC_Playback
+  When a user clicks on a camera,
+  a list will appear in the user
+  interface. Users can view the 
+  playback of any camera from the
+  past 72 hours through our platform.
+end note
+
+note right of UC_Favorite
+  After logging in, a favorites 
+  list button will appear on the 
+  user interface. Users can add 
+  or remove cameras from their 
+  favorites list.
+end note
+
+note right of UC_History
+  After logging in, a browsing history
+  button will appear on the user 
+  interface. Users can view or clear
+  their browsing history.
+end note
+
+note right of UC_Manage
+  After logging in, an administrator 
+  list will appear on the user interface
+  for administrators. Administrators can
+  manage the cameras displayed on the 
+  platform through this list.
+end note
+
+@enduml

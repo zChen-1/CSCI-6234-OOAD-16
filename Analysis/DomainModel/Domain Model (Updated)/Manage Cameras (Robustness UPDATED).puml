@@ -1,0 +1,28 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 60
+skinparam padding 15
+skinparam defaultFontSize 13
+
+actor "Admin/Developer" as AAdmin
+
+rectangle "Traffic Camera Browser" {
+  boundary "Admin Management UI" as UI
+  control "Camera Management Controller" as CMC
+  entity "Admin" as AdminEntity
+  entity "Camera" as CameraEntity
+}
+
+AAdmin --> UI : add/remove camera
+UI --> CMC : management request
+CMC --> AdminEntity : verify admin login/role
+CMC --> CameraEntity : add/remove camera record
+CMC --> UI : show success/error
+
+note bottom of UI
+After logging in, administrators can manage
+the cameras displayed on the platform.
+end note
+@enduml

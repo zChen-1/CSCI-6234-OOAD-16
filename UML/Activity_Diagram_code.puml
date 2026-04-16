@@ -1,0 +1,19 @@
+@startuml
+start
+:Open Wiki;
+:Enter search query;
+
+if (Page found?) then (yes)
+  :Display page;
+  if (Edit selected?) then (yes)
+    :Edit content;
+    :Save changes;
+  else (no)
+    :Read page;
+  endif
+else (no)
+  :Show "Page not found";
+endif
+
+stop
+@enduml

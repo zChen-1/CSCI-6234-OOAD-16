@@ -1,0 +1,31 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 60
+skinparam padding 15
+skinparam defaultFontSize 13
+
+actor "User" as AUser
+
+rectangle "Traffic Camera Browser" {
+  boundary "Browsing History UI" as UI
+  control "History Controller" as HC
+  entity "HistoryEntry" as HE
+  entity "User" as UserEntity
+  entity "Camera" as CameraEntity
+}
+
+AUser --> UI : open history / clear history
+UI --> HC : history request
+HC --> UserEntity : identify user
+
+HC --> HE : retrieve/clear history items
+HC --> CameraEntity : load camera details
+HC --> UI : show updated history
+
+note bottom of UI
+After logging in, a browsing history button
+appears. Users can view or clear history.
+end note
+@enduml

@@ -1,0 +1,15 @@
+{
+  "recording_id": "cam222",
+  "camera_site": "cam222",
+  "camera_id": "222",
+  "camera_name": "Camera 222",
+  "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam222.stream/playlist.m3u8",
+  "state": "stopped",
+  "pid": null,
+  "segment_seconds": 60,
+  "window_hours": 72,
+  "updated_at": "2026-04-13T01:20:24.066097Z",
+  "last_exit_code": 255,
+  "last_error": "",
+  "current_clip_path": ""
+}

@@ -1,0 +1,153 @@
+@startuml
+title Traffic Camera Browser - Complete Class Diagram
+
+' =========================
+' Core Entities
+' =========================
+class User <<entity>> {
+  +userId: UUID
+  +email: String
+  +displayName: String
+  +role: Role
+  +createdAt: DateTime
+  --
+  +isAdmin(): boolean
+  +updateProfile(name: String): void
+}
+
+class Admin <<entity>> {
+  +adminLevel: int
+  --
+  +canManageCameras(): boolean
+}
+
+User <|-- Admin
+
+class Account <<entity>> {
+  +accountId: UUID
+  +email: String
+  +passwordHash: String
+  +status: AccountStatus
+  --
+  +activate(): void
+  +disable(): void
+  +verifyPassword(raw: String): boolean
+}
+
+class Camera <<entity>> {
+  +cameraId: UUID
+  +name: String
+  +latitude: double
+  +longitude: double
+  +streamUrl: String
+  --
+  +getLocationLabel(): String
+  +isValidStream(): boolean
+}
+
+class FavoriteList <<entity>> {
+  +favoriteListId: UUID
+  +ownerUserId: UUID
+  --
+  +addCamera(c: Camera): void
+  +removeCamera(cameraId: UUID): void
+  +contains(cameraId: UUID): boolean
+}
+
+class BrowsingHistory <<entity>> {
+  +historyId: UUID
+  +ownerUserId: UUID
+  --
+  +recordView(cameraId: UUID, mode: ViewMode, watchedAt: DateTime): void
+  +getEntries(): List<HistoryEntry>
+  +clearAll(): void
+}
+
+class HistoryEntry <<entity>> {
+  +entryId: UUID
+  +cameraId: UUID
+  +mode: ViewMode
+  +watchedAt: DateTime
+  --
+  +summary(): String
+}
+
+class PlaybackRequest <<entity>> {
+  +requestId: UUID
+  +cameraId: UUID
+  +requestedTime: DateTime
+  --
+  +isWithin72Hours(now: DateTime): boolean
+}
+
+' =========================
+' Services / Repositories
+' =========================
+class CameraRepository <<service>> {
+  +findById(cameraId: UUID): Camera
+  +listCameras(): List<Camera>
+  +save(c: Camera): UUID
+  +delete(cameraId: UUID): void
+}
+
+class LiveStreamService <<service>> {
+  +requestLiveStream(streamUrl: String): StreamSession
+}
+
+class PlaybackService <<service>> {
+  +getAvailableWindow(cameraId: UUID, hours: int): TimeRange
+  +getPlaybackStream(cameraId: UUID, time: DateTime): String
+}
+
+class AuthService <<service>> {
+  +validateNewCredentials(email: String, password: String): boolean
+  +validateSession(sessionToken: String): Role
+  +hashPassword(raw: String): String
+}
+
+class StreamSession <<entity>> {
+  +token: String
+  +streamUrl: String
+  +expiresAt: DateTime
+  --
+  +isExpired(now: DateTime): boolean
+}
+
+' =========================
+' Associations (with multiplicities)
+' =========================
+User "1" o-- "1" Account : owns
+User "1" o-- "0..1" FavoriteList : has
+User "1" o-- "0..1" BrowsingHistory : has
+BrowsingHistory "1" o-- "0..*" HistoryEntry : contains
+
+FavoriteList "0.." -- "0.." Camera : favorites
+HistoryEntry "0..*" --> "1" Camera : viewedCamera
+PlaybackRequest "0..*" --> "1" Camera : forCamera
+
+' Dependencies
+CameraRepository ..> Camera
+LiveStreamService ..> StreamSession
+PlaybackService ..> Camera
+AuthService ..> Account
+AuthService ..> User
+
+' =========================
+' Enums (FIXED FORMAT)
+' =========================
+enum Role {
+  USER
+  ADMIN
+}
+
+enum ViewMode {
+  LIVE
+  PLAYBACK
+}
+
+enum AccountStatus {
+  ACTIVE
+  DISABLED
+}
+
+@enduml

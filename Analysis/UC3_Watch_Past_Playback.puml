@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+
+actor "User" as User
+
+rectangle "Traffic Camera Browser" {
+
+  boundary "Camera Detail + Playback UI\n<<boundary>>" as B1
+  control "Playback Controller\n<<control>>" as C1
+  entity "Camera Catalog\n<<entity>>" as E1
+  entity "Recording Cache (72h)\n<<entity>>" as E2
+}
+
+note right of B1
+  When a user clicks on a camera, a list
+  will appear in the user interface. Users
+  can view playback of any camera from the
+  past 72 hours through our platform.
+end note
+
+User --> B1 : choose time range
+B1 --> C1 : playback request
+C1 --> E1 : verify camera exists
+C1 --> E2 : retrieve video segments
+C1 --> B1 : stream playback video
+
+@enduml

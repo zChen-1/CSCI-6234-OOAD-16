@@ -1,0 +1,41 @@
+@startuml
+title Watch Live Traffic Camera - Activity Diagram
+
+legend left
+= Steps (must map to actions) =
+1.⁠ ⁠User opens the platform
+2.⁠ ⁠System displays map with camera locations
+3.⁠ ⁠User clicks a camera on the map
+4.⁠ ⁠System loads live stream for that camera
+5.⁠ ⁠System starts playing live video
+6.⁠ ⁠User may switch cameras or stop watching
+endlegend
+
+partition "User" {
+  start
+  :1. Open platform;
+}
+
+partition "System" {
+  :2. Display map\nwith camera locations;
+}
+
+partition "User" {
+  :3. Click a camera marker;
+}
+
+partition "System" {
+  :4. Load live stream;
+  if (Stream available?) then (Yes)
+    :5. Play live video;
+  else (No)
+    :Show "Live stream unavailable";
+    stop
+  endif
+}
+
+partition "User" {
+  :6. Switch camera or stop watching;
+  stop
+}
+@enduml

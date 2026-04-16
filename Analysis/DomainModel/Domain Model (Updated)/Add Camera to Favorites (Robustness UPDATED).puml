@@ -1,0 +1,30 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 60
+skinparam padding 15
+skinparam defaultFontSize 13
+
+actor "User" as AUser
+
+rectangle "Traffic Camera Browser" {
+  boundary "Camera Viewer UI" as UI
+  control "Favorites Controller" as FC
+  entity "Favorite" as FavoriteEntity
+  entity "User" as UserEntity
+  entity "Camera" as CameraEntity
+}
+
+AUser --> UI : click "Add to Favorites"
+UI --> FC : add favorite request
+FC --> UserEntity : identify user
+FC --> CameraEntity : fetch selected camera
+FC --> FavoriteEntity : create Favorite\n(user + camera)
+FC --> UI : confirm added
+
+note bottom of UI
+After logging in, a favorites button appears.
+Users can add cameras to their favorites list.
+end note
+@enduml

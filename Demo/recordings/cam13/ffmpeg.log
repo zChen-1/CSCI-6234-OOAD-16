@@ -1,0 +1,11 @@
+[2026-04-12T20:54:59.773574] Recorder thread started
+[2026-04-12T20:54:59.776461] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam13/clips/2026/04/13/cam13_20260413T005459Z.mp4
+[tls @ 0x7fb72ec053c0] IO error: End of file
+[https @ 0x7fb72ec05280] Error reading HTTP response: End of file
+[tls @ 0x7fb71df18cc0] IO error: End of file
+[https @ 0x7fb71df1ae00] Error reading HTTP response: End of file
+[tls @ 0x7fb71df2d340] IO error: End of file
+[https @ 0x7fb71df18900] Error reading HTTP response: End of file
+[tls @ 0x7fb72eb62580] IO error: End of file
+[https @ 0x7fb72eb5e640] Error reading HTTP response: End of file
+[2026-04-12T20:55:22.922494] Recorder thread stopped

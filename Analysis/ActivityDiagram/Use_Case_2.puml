@@ -1,0 +1,53 @@
+@startuml
+title Register Account - Activity Diagram
+
+legend left
+= Steps (must map to actions) =
+1.⁠ ⁠User opens the platform
+2.⁠ ⁠User clicks Register/Sign Up
+3.⁠ ⁠System shows registration form
+4.⁠ ⁠User enters registration info and submits
+5.⁠ ⁠System sends credentials to Authentication Service
+6.⁠ ⁠Authentication Service validates credentials/rules
+7.⁠ ⁠System creates the account
+8.⁠ ⁠System confirms registration (and optionally logs user in)
+9.⁠ ⁠User navigates to platform features
+endlegend
+
+partition "User" {
+  start
+  :1. Open platform;
+  :2. Click "Register/Sign Up";
+}
+
+partition "System" {
+  :3. Show registration form;
+}
+
+partition "User" {
+  :4. Enter info\n(email/username/password)\nand submit;
+}
+
+partition "System" {
+  :5. Send registration request\nto Authentication Service;
+}
+
+partition "Authentication Service" {
+  :6. Validate credentials\n(format, strength, uniqueness);
+}
+
+partition "System" {
+  if (Validation passed?) then (Yes)
+    :7. Create user account;
+    :8. Show success confirmation\n(optional: auto-login);
+    partition "User" {
+      :9. Continue to platform features;
+      stop
+    }
+  else (No)
+    :Show error messages\n(e.g., weak password,\nemail already used);
+    :Return to registration form;
+    stop
+  endif
+}
+@enduml

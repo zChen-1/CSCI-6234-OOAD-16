@@ -1,0 +1,90 @@
+@startuml
+title Manage Cameras (Add / Remove) - Activity Diagram
+
+legend left
+= Steps (must map to actions) =
+ 1.⁠ ⁠Admin opens the management platform
+ 2.⁠ ⁠Admin selects "Log in"
+ 3.⁠ ⁠System prompts for admin credentials
+ 4.⁠ ⁠Admin enters credentials and submits
+ 5.⁠ ⁠System validates credentials
+ 6.⁠ ⁠System shows administrator camera list
+ 7.⁠ ⁠Admin chooses Add or Remove
+8A. Admin enters new camera details
+9A. System validates details and saves camera
+10A. System refreshes list (camera added)
+8B. Admin selects a camera to remove
+9B. System asks for confirmation
+10B. Admin confirms removal
+11B. System removes camera and refreshes list
+12.⁠ ⁠Admin logs out (optional)
+endlegend
+
+partition "Admin/Developer" {
+  start
+  :1. Open management platform;
+  :2. Select "Log in";
+}
+
+partition "System" {
+  :3. Prompt for admin credentials;
+}
+
+partition "Admin/Developer" {
+  :4. Enter credentials\nand submit;
+}
+
+partition "System" {
+  :5. Validate admin credentials;
+  if (Credentials valid?) then (Yes)
+    :6. Show administrator\ncamera list;
+  else (No)
+    :Show error message;
+    :Return to login screen;
+    stop
+  endif
+}
+
+partition "Admin/Developer" {
+  :7. Choose action:\nAdd or Remove;
+  if (Add?) then (Add)
+    :8A. Enter new camera details;
+  else (Remove)
+    :8B. Select camera to remove;
+  endif
+}
+
+partition "System" {
+  if (Add flow?) then (Add)
+    :9A. Validate camera details;
+    if (Details valid?) then (Yes)
+      :Save camera;
+      :10A. Refresh camera list;
+    else (No)
+      :Show validation errors;
+      :Return to add form;
+      stop
+    endif
+  else (Remove)
+    :9B. Ask for removal confirmation;
+  endif
+}
+
+partition "Admin/Developer" {
+  if (Remove confirmation needed?) then (Remove)
+    :10B. Confirm removal;
+  endif
+}
+
+partition "System" {
+  if (Remove flow?) then (Remove)
+    :11B. Remove camera;
+    :Refresh camera list;
+  endif
+}
+
+partition "Admin/Developer" {
+  :12. Log out (optional);
+  stop
+}
+@enduml

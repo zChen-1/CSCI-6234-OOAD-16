@@ -1,0 +1,29 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam nodesep 120
+skinparam ranksep 60
+skinparam padding 15
+skinparam defaultFontSize 13
+
+actor "User" as AUser
+
+rectangle "Traffic Camera Browser" {
+  boundary "Registration/Login UI" as UI
+  control "Registration Controller" as RC
+  entity "User" as UserEntity
+}
+
+actor "Authentication Service" as AS
+
+AUser --> UI : enter info + submit
+UI --> RC : registration request
+RC --> UserEntity : create user record
+RC --> AS : validate credentials\nhash password
+RC --> UI : show success/error
+
+note bottom of UI
+Users can find a registration/login
+button in the corner of the page.
+end note
+@enduml

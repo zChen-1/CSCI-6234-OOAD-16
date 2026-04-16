@@ -1,0 +1,25 @@
+@startuml
+title UC: View / Clear Browsing History (Logged-in User)
+
+actor "User" as U
+boundary "History UI" as HUI
+control "HistoryController" as HC
+entity "BrowsingHistory" as BH
+
+U -> HUI: Click "Browsing History"
+HUI -> HC: getHistory(userId)
+
+HC -> BH: load(userId)
+BH --> HC: entries (cameraId, watchedAt, mode)
+
+HC --> HUI: render(entries)
+
+opt user clears history
+  U -> HUI: Click "Clear History"
+  HUI -> HC: clearHistory(userId)
+  HC -> BH: clearAll()
+  BH --> HC: cleared
+  HC --> HUI: showEmptyState()
+end
+
+@enduml

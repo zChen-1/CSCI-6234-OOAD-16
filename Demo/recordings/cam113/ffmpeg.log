@@ -1,0 +1,32 @@
+[2026-04-12T20:55:32.948661] Recorder thread started
+[2026-04-12T20:55:32.951567] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam113/clips/2026/04/13/cam113_20260413T005532Z.mp4
+[https @ 0x7fa2ca804c80] HTTP error 404 Not Found
+[in#0 @ 0x7fa2ca8046c0] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam113.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:33.319110] ffmpeg exited with code 8
+[2026-04-12T20:55:35.327128] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam113/clips/2026/04/13/cam113_20260413T005535Z.mp4
+[https @ 0x7fe7f2f08540] HTTP error 404 Not Found
+[in#0 @ 0x7fe7f2f08000] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam113.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:35.746048] ffmpeg exited with code 8
+[2026-04-12T20:55:37.760383] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam113/clips/2026/04/13/cam113_20260413T005537Z.mp4
+[https @ 0x7f823e804a00] HTTP error 404 Not Found
+[in#0 @ 0x7f823e804440] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam113.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:38.086295] ffmpeg exited with code 8
+[2026-04-12T20:55:40.099463] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam113/clips/2026/04/13/cam113_20260413T005540Z.mp4
+[https @ 0x7f8e56004c80] HTTP error 404 Not Found
+[in#0 @ 0x7f8e560046c0] Error opening input: Server returned 404 Not Found
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam113.stream/playlist.m3u8.
+Error opening input files: Server returned 404 Not Found
+[2026-04-12T20:55:40.561770] ffmpeg exited with code 8
+[2026-04-12T20:55:42.571610] Starting 60-second capture -> /Users/Chen/PycharmProjects/CSCI_6234_Final/recordings/cam113/clips/2026/04/13/cam113_20260413T005542Z.mp4
+[tls @ 0x7fb2af004f40] Unknown error
+[https @ 0x7fb2af004c80] Error reading HTTP response: Input/output error
+[in#0 @ 0x7fb2af0046c0] Error opening input: Input/output error
+Error opening input file https://itsvideo.arlingtonva.us:8011/live/cam113.stream/playlist.m3u8.
+Error opening input files: Input/output error
+[2026-04-12T20:55:42.967988] Recorder thread stopped

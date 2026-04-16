@@ -1,0 +1,39 @@
+@startuml
+title Add Camera to Favorites - Activity Diagram
+
+legend left
+= Steps (must map to actions) =
+1.⁠ ⁠User opens the platform
+2.⁠ ⁠User logs in (required for favorites)
+3.⁠ ⁠System shows "Favorites" button
+4.⁠ ⁠User navigates to a camera (map/camera page)
+5.⁠ ⁠User clicks "Add to Favorites" or "Remove from Favorites"
+6.⁠ ⁠System updates favorites list
+7.⁠ ⁠System confirms update and refreshes favorites view
+endlegend
+
+partition "User" {
+  start
+  :1. Open platform;
+  :2. Log in;
+}
+
+partition "System" {
+  :3. Show "Favorites" button;
+}
+
+partition "User" {
+  :4. Navigate to a camera\n(via map/camera list);
+  :5. Choose:\nAdd or Remove favorite;
+}
+
+partition "System" {
+  if (Add favorite?) then (Add)
+    :6. Add camera to favorites list;
+  else (Remove)
+    :6. Remove camera from favorites list;
+  endif
+  :7. Confirm update\nand refresh favorites view;
+  stop
+}
+@enduml

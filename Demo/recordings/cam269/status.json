@@ -1,0 +1,15 @@
+{
+  "recording_id": "cam269",
+  "camera_site": "cam269",
+  "camera_id": "269",
+  "camera_name": "Camera 269",
+  "stream_url": "https://itsvideo.arlingtonva.us:8013/live/cam269.stream/playlist.m3u8",
+  "state": "stopped",
+  "pid": null,
+  "segment_seconds": 60,
+  "window_hours": 72,
+  "updated_at": "2026-04-13T01:20:24.068097Z",
+  "last_exit_code": 255,
+  "last_error": "",
+  "current_clip_path": ""
+}

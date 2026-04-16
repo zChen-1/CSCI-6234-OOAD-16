@@ -1,0 +1,34 @@
+@startuml
+title UC: Register Account (Traffic Camera Browser)
+
+' Simple + unique naming, with comments to reduce similarity
+actor "User" as U
+boundary "Web UI" as UI
+control "AccountController" as ACC
+entity "Account" as A
+entity "UserProfile" as P
+participant "Authentication Service" as AUTH
+
+U -> UI: Click Register
+UI -> U: Show registration form
+
+U -> UI: Submit(email, password, displayName)
+UI -> ACC: register(email, password, displayName)
+
+' Ask auth service to validate/accept credentials
+ACC -> AUTH: validateNewCredentials(email, password)
+AUTH --> ACC: ok / error
+
+alt credentials valid
+  ACC -> A: create(email, hash(password), status="ACTIVE")
+  A --> ACC: accountId
+  ACC -> P: createProfile(accountId, displayName)
+  P --> ACC: profileCreated
+  ACC --> UI: Registration success + session started
+  UI --> U: Redirect to map page
+else credentials invalid
+  ACC --> UI: Show validation error
+  UI --> U: Error message
+end
+
+@enduml

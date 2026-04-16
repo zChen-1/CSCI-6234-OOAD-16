@@ -1,0 +1,42 @@
+@startuml
+title UC: Manage Cameras (Admin Only)
+
+actor "Admin/Developer" as AD
+boundary "Admin UI" as AUI
+control "AdminCameraController" as AMC
+participant "Authentication Service" as AUTH
+entity "CameraRepository" as CR
+entity "Camera" as C
+
+AD -> AUI: Open Admin Camera List
+AUI -> AMC: requestAdminPanel(sessionToken)
+
+AMC -> AUTH: validateSession(sessionToken)
+AUTH --> AMC: role=ADMIN / denied
+
+alt role is ADMIN
+  AMC -> CR: listCameras()
+  CR --> AMC: cameraList
+  AMC --> AUI: show(cameraList)
+
+  opt Add a camera
+    AD -> AUI: Submit new camera info
+    AUI -> AMC: addCamera(name, location, streamUrl)
+    AMC -> CR: save(new Camera(...))
+    CR --> AMC: saved(cameraId)
+    AMC --> AUI: refresh list (added)
+  end
+
+  opt Remove a camera
+    AD -> AUI: Click Remove(cameraId)
+    AUI -> AMC: removeCamera(cameraId)
+    AMC -> CR: delete(cameraId)
+    CR --> AMC: deleted
+    AMC --> AUI: refresh list (removed)
+  end
+
+else not ADMIN
+  AMC --> AUI: showAccessDenied()
+end
+
+@enduml

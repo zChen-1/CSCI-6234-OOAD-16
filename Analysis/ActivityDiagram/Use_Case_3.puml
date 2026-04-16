@@ -1,0 +1,68 @@
+@startuml
+title View Browsing History - Activity Diagram
+
+legend left
+= Steps (must map to actions) =
+1.⁠ ⁠User opens the platform
+2.⁠ ⁠User logs in (if not already)
+3.⁠ ⁠System displays "Browsing History" button
+4.⁠ ⁠User clicks "Browsing History"
+5.⁠ ⁠System retrieves browsing history items
+6.⁠ ⁠System shows history list
+7.⁠ ⁠User chooses View item OR Clear history
+8A. User selects an item to view
+9A. System opens the selected camera/video context
+8B. System asks to confirm clearing history
+9B. User confirms clear
+10B. System clears history and refreshes list
+endlegend
+
+partition "User" {
+  start
+  :1. Open platform;
+  :2. Log in (if needed);
+}
+
+partition "System" {
+  :3. Show "Browsing History" button;
+}
+
+partition "User" {
+  :4. Click "Browsing History";
+}
+
+partition "System" {
+  :5. Retrieve browsing history;
+  :6. Display history list;
+}
+
+partition "User" {
+  :7. Choose action:\nView item or Clear history;
+  if (View item?) then (View)
+    :8A. Select a history item;
+  else (Clear)
+    :Request "Clear history";
+  endif
+}
+
+partition "System" {
+  if (View flow?) then (View)
+    :9A. Open selected item\n(camera/video context);
+    stop
+  else (Clear)
+    :8B. Ask confirmation to clear;
+  endif
+}
+
+partition "User" {
+  if (Clear confirmation needed?) then (Clear)
+    :9B. Confirm clear;
+  endif
+}
+
+partition "System" {
+  :10B. Clear browsing history;
+  :Refresh history list (now empty);
+  stop
+}
+@enduml

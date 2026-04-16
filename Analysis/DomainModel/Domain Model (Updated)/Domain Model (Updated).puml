@@ -1,0 +1,89 @@
+@startuml
+' ===== Readability settings =====
+scale 0.85
+left to right direction
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam padding 8
+skinparam nodesep 35
+skinparam ranksep 30
+
+title Traffic Camera Browser - Domain Model (Updated)
+
+' ===== Classes =====
+class User {
+  +userId: UUID
+  +email: String
+  +passwordHash: String
+}
+
+class Admin {
+  +adminId: UUID
+  +role: String
+}
+
+class Camera {
+  +cameraId: String
+  +name: String
+  +latitude: Decimal
+  +longitude: Decimal
+  +streamUrl: String
+  +isActive: Boolean
+}
+
+class Favorite {
+  +favoriteId: UUID
+  +createdAt: DateTime
+}
+
+class PlaybackRequest {
+  +requestId: UUID
+  +requestedAt: DateTime
+  +startTime: DateTime
+  +endTime: DateTime
+}
+
+class HistoryEntry {
+  +historyId: UUID
+  +viewedAt: DateTime
+  +viewType: String  ' LIVE or PLAYBACK
+}
+
+class RecordingSegment {
+  +segmentId: String
+  +startTime: DateTime
+  +endTime: DateTime
+  +videoUrl: String
+}
+
+' ===== Inheritance =====
+Admin --|> User
+
+' ===== Associations (names + role names + multiplicities) =====
+User  "account 1"     -- "favorites 0..*"      Favorite        : owns
+Favorite "favorite 0..*" -- "camera 1"         Camera          : savedFor
+
+User  "requester 1"   -- "requests 0..*"       PlaybackRequest : creates
+PlaybackRequest "request 0..*" -- "camera 1"   Camera          : requestedFor
+
+User  "viewer 1"      -- "history 0..*"        HistoryEntry    : has
+HistoryEntry "entry 0..*" -- "camera 1"        Camera          : viewedOn
+
+Camera "source 1"     -- "segments 0..*"       RecordingSegment: provides
+
+note left of User
+Users register/login using email.
+Admins are specialized Users with a role.
+end note
+
+note right of HistoryEntry
+HistoryEntry.viewType ∈ {LIVE, PLAYBACK}
+end note
+
+note right of RecordingSegment
+Represents time-based stored video
+segments available for playback.
+end note
+
+@enduml

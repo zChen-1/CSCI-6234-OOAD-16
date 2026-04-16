@@ -1,0 +1,61 @@
+@startuml
+title Watch Past Playback (last 72 hours) - Activity Diagram
+
+legend left
+= Steps (must map to actions) =
+ 1.⁠ ⁠User opens the platform
+ 2.⁠ ⁠System displays map with camera locations
+ 3.⁠ ⁠User clicks a camera on the map
+ 4.⁠ ⁠System shows camera details panel (with playback option)
+ 5.⁠ ⁠User selects "Past Playback"
+ 6.⁠ ⁠System shows timeline/range up to last 72 hours
+ 7.⁠ ⁠User selects a time segment
+ 8.⁠ ⁠System loads the requested playback video
+ 9.⁠ ⁠System plays playback
+10.⁠ ⁠User may change time segment or exit
+endlegend
+
+partition "User" {
+  start
+  :1. Open platform;
+}
+
+partition "System" {
+  :2. Display map\nwith camera locations;
+}
+
+partition "User" {
+  :3. Click a camera marker;
+}
+
+partition "System" {
+  :4. Show camera details panel;
+}
+
+partition "User" {
+  :5. Select "Past Playback";
+}
+
+partition "System" {
+  :6. Display playback range\n(last 72 hours);
+}
+
+partition "User" {
+  :7. Select a time segment;
+}
+
+partition "System" {
+  :8. Load playback video\nfor selected time;
+  if (Video available?) then (Yes)
+    :9. Play playback;
+  else (No)
+    :Show "Playback not available\nfor selected time";
+    stop
+  endif
+}
+
+partition "User" {
+  :10. Change time segment or exit;
+  stop
+}
+@enduml
