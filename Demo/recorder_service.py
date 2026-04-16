@@ -37,11 +37,10 @@ LOG_LEVEL = os.getenv("REPLAY_FFMPEG_LOGLEVEL", "warning")
 
 stop_requested = False
 
-
-@dataclass
 '''
 Manages recording for the camera
 '''
+@dataclass
 class CameraRecorder:
     camera: dict
     worker: threading.Thread | None = None
